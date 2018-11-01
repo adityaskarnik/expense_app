@@ -172,6 +172,7 @@
   .badge {
     border: 1px solid #000; }
   .table {
+    overflow: auto;
     border-collapse: collapse !important; }
     .table td,
     .table th {
