@@ -3,12 +3,6 @@
 {% load static %}
 {% block content %}
 
-{% if user.is_authenticated %}
-  Hi {{ user.username }}!
-{% else %}
-  <p>You are not logged in</p>
-  <a href="{% url 'login' %}">login</a>
-{% endif %}
 <!-- Main content -->
 <div class="content-wrapper">
     
@@ -72,7 +66,7 @@
         <!-- Basic initialization -->
         <div class="card">
             <div class="card-header header-elements-inline">
-                <h5 class="card-title">Basic initialization</h5>
+                <h5 class="card-title">All expenses </h5>
                 <div class="header-elements">
                     <div class="list-icons">
                         <a class="list-icons-item" data-action="collapse"></a>
@@ -81,12 +75,9 @@
                     </div>
                 </div>
             </div>
-
-            <div class="card-body">
-                The HTML5 export buttons plug-in for Buttons provides four export buttons: <code>copyHtml5</code> - copy to clipboard; <code>csvHtml5</code> - save to CSV file; <code>excelHtml5</code> - save to XLSX file (requires JSZip); <code>pdfHtml5</code> - save to PDF file (requires PDFMake). This example demonstrates these four button types with their default options. Please note that these button types may also use a Flash fallback for older browsers (IE9-).
-            </div>
             {% if data %}
-            <table id="expense_table" class="table datatable-button-html5-basic" style="overflow-x:auto;">
+            
+            <table id="expense_table" class="table table-striped table-bordered" style="width:100%">
                 <thead>
                     <tr>
                         {% for k in data.0 %}
@@ -114,4 +105,25 @@
 
 </div>
 <!-- /main content -->
+
+<script type="text/javascript" language="javascript">
+    table = $(document).ready( function () {
+        $('#expense_table').DataTable({
+            "scrollX": "100%",
+            "scrollCollapse": true,
+            buttons: {            
+                dom: {
+                    button: {
+                        className: 'btn btn-light'
+                    }
+                },
+                buttons: [
+                    'excelHtml5',
+                    'csvHtml5',
+                    'pdfHtml5'
+                ]
+            },            
+        });
+    } );
+</script>
 {% endblock %}
