@@ -63,12 +63,19 @@
 					<div class="card-body">
 						<div class="text-center mb-3">
 							<i class="icon-people icon-2x text-warning-400 border-warning-400 border-3 rounded-round p-3 mb-3 mt-1"></i>
-							<h5 class="mb-0">Login to your account</h5>
+							<h5 class="mb-0">Register your account</h5>
 							<span class="d-block text-muted">Your credentials</span>
 						</div>
 
 						<div class="form-group form-group-feedback form-group-feedback-left">
 							<input type="text" class="form-control" placeholder="Username" name="username">
+							<div class="form-control-feedback">
+								<i class="icon-user text-muted"></i>
+							</div>
+                        </div>
+
+						<div class="form-group form-group-feedback form-group-feedback-left">
+							<input type="email" class="form-control" placeholder="Email" name="email">
 							<div class="form-control-feedback">
 								<i class="icon-user text-muted"></i>
 							</div>
@@ -80,34 +87,23 @@
 								<i class="icon-lock2 text-muted"></i>
 							</div>
 						</div>
-
-						<div class="form-group d-flex align-items-center">
-							<div class="form-check mb-0">
-								<label class="form-check-label">
-									<input type="checkbox" name="remember" class="form-input-styled" checked data-fouc>
-									Remember
-								</label>
-							</div>
-
-							<a href="login_password_recover.html" class="ml-auto">Forgot password?</a>
-						</div>
 						
 						{% if form.errors %}
 						<div class="alert bg-danger text-white alert-dismissible">
 							<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-							<span class="font-weight-semibold">Oh snap!</span> Your username and password didn't match. Please try again.</a>
+							<span class="font-weight-semibold">Oh snap!</span> Change a few things up and <a href="#" class="alert-link">try submitting again</a>.
 						</div>
                 		{% endif %}
 						<div class="form-group">
-							<button type="submit" class="btn btn-primary btn-block">Sign in <i class="icon-circle-right2 ml-2"></i></button>
+							<button type="submit" class="btn btn-primary btn-block">Sign up<i class="icon-circle-right2 ml-2"></i></button>
 						</div>
 						<input type="hidden" name="next" value="{{ next }}" />
 						<div class="form-group text-center text-muted content-divider">
-							<span class="px-2">Don't have an account?</span>
+							<span class="px-2">Already have a account?</span>
 						</div>
 
 						<div class="form-group">
-							<a href="/register" class="btn btn-dark btn-block">Sign up</a>
+							<a href="/login" class="btn btn-dark btn-block">Sign in</a>
 						</div>
 
 					</div>

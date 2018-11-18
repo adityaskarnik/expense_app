@@ -2,7 +2,13 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
+{% if user.is_authenticated %}
 
+{% else %}
+<script language="javascript">
+    window.location.href = "/"
+</script>
+{% endif %}
 <!-- Main content -->
 <div class="content-wrapper">
     

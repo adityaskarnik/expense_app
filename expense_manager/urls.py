@@ -20,9 +20,6 @@ from django.conf.urls import url
 from django.views.generic.base import TemplateView
 
 urlpatterns = [
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('expense_app/', include('expense_app.urls')),
-    path('expense_app/', include('django.contrib.auth.urls')),
+    url(r'^', include('expense_app.urls')),
     path('admin/', admin.site.urls),
-    path('', TemplateView.as_view(template_name='login.html'), name='login'),
 ]
