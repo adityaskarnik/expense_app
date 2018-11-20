@@ -115,10 +115,18 @@
 <script type="text/javascript" language="javascript">
     table = $(document).ready( function () {
         $('#expense_table').DataTable({
-            "scrollX": "100%",
-            "scrollCollapse": true,
-            fixedColumns: true,
+            scrollX:        true,
+		    scrollCollapse: true,
+		    fixedColumns:   true,
+            "columnDefs": [
+                { "title": "Date",   "targets": 0, "data": "Date", },
+                { "title": "Category",  "targets": 1 }
+                // { "name": "platform", "targets": 2 },
+                // { "name": "version",  "targets": 3 },
+                // { "name": "grade",    "targets": 4 }
+            ],
             "order": [[ 0, "desc" ]],
+            
             buttons: {            
                 dom: {
                     button: {
