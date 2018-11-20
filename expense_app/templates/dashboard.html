@@ -117,6 +117,8 @@
         $('#expense_table').DataTable({
             "scrollX": "100%",
             "scrollCollapse": true,
+            fixedColumns: true,
+            "order": [[ 0, "desc" ]],
             buttons: {            
                 dom: {
                     button: {
