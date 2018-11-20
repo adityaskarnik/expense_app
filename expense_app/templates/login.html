@@ -2,7 +2,7 @@
 {% load static %}
 {% if user.is_authenticated %}
 <script language="javascript">
-    window.location.href = "expense_app"
+    window.location.href = "/expense_app"
 </script>
 {% endif %}
 <html lang="en">
@@ -95,7 +95,12 @@
 						{% if form.errors %}
 						<div class="alert bg-danger text-white alert-dismissible">
 							<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
-							<span class="font-weight-semibold">Oh snap!</span> Your username and password didn't match. Please try again.</a>
+							<!-- <span class="font-weight-semibold">Oh snap!</span>{{ form.errors }}</a> -->
+							{% for field, errors in form.errors.items %}
+								{% for error in errors %}
+								<b>{{ field }}:</b> {{ error }}
+								{% endfor %}
+            				{% endfor %}
 						</div>
                 		{% endif %}
 						<div class="form-group">

@@ -8,12 +8,15 @@ from django.urls import reverse_lazy
 from django.views import generic
 from django.http import HttpResponse, JsonResponse, HttpResponseRedirect
 import json
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate, login
 from django import forms
 from .forms import SignUpForm
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+import os
+cwd = os.getcwd()
+User = get_user_model()
 
 # Create your views here.
 @login_required
@@ -30,7 +33,7 @@ def signup(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            return redirect('home')
+            return redirect('/expense_app')
     else:
         form = SignUpForm()
     return render(request, 'register.html', {'form': form})
@@ -44,10 +47,10 @@ def index(request):
     # html = "<html><body>It is now %s</body></html>" % now
     t = get_template('dashboard.html')
     # html = t.render({'current_date': now})
-    with open('/home/adityakarnik/console_projects/expense_manager/expense_data.json') as d:
+    print(cwd+'/expense_data.json')
+    with open(cwd+'/expense_data.json') as d:
         data = json.loads(d.read())
-    
     return render(request, 'dashboard.html', {'data':data})
 
-with open('/home/adityakarnik/console_projects/expense_manager/expense_data.json') as d:
-    data = json.load(d)
+# with open(cwd+'/expense_data.json') as d:
+#     data = json.load(d)
