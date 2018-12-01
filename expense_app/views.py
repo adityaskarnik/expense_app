@@ -11,31 +11,36 @@ import json
 from django.contrib.auth import get_user_model
 from django.contrib.auth import authenticate, login
 from django import forms
-from .forms import SignUpForm
+from .forms import SignUpForm, CustomUserCreationForm
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 import os
 cwd = os.getcwd()
 User = get_user_model()
 
 # Create your views here.
-@login_required
-def dashboard(request):
-    return render(request, 'dashboard.html')
+# @login_required
+# def dashboard(request):
+#     return render(request, 'dashboard.html')
 
 def signup(request):
     if request.method == 'POST':
-        form = SignUpForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             form.save()
-            username = form.cleaned_data.get('username')
-            email = form.cleaned_data.get('email')
-            raw_password = form.cleaned_data.get('password1')
-            user = authenticate(username=username, password=raw_password)
-            login(request, user)
+            messages.success(request, 'Account created successfully')
+            # firstname = form.cleaned_data.get('firstname')
+            # lastname = form.cleaned_data.get('lastname')
+            # username = form.cleaned_data.get('username')
+            # email = form.cleaned_data.get('email')
+            # raw_password = form.cleaned_data.get('password1')
+            # user = authenticate(firstname=firstname, lastname=lastname, username=username, email=email, password=raw_password)
+            # print(user)
+            # login(request, user)
             return redirect('/expense_app')
     else:
-        form = SignUpForm()
+        form = CustomUserCreationForm()
     return render(request, 'register.html', {'form': form})
 
 def index(request):
@@ -52,5 +57,5 @@ def index(request):
         data = json.loads(d.read())
     return render(request, 'dashboard.html', {'data':data})
 
-# with open(cwd+'/expense_data.json') as d:
-#     data = json.load(d)
+with open(cwd+'/expense_data.json') as d:
+    data = json.load(d)
