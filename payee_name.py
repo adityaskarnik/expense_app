@@ -71,9 +71,6 @@ if (is_connected()):
 
             if (matchAmount is not None and matchDate is not None):
                 try:
-                    # finalresult = ' '.join(matchPayeeName.group())
-                    # finalresult = ' '.join(matchAmount.group())
-                    # finalresult = ' '.join(matchDate.group())
                     date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%Y').strftime('%Y/%m/%d')
                     resutlDict[num]['payee'] = matchPayeeName.group()
                     resutlDict[num]['amount'] = matchAmount.group()
@@ -85,10 +82,8 @@ if (is_connected()):
                     resutlDict[num]['payee'] = matchPayeeName.group()
                     resutlDict[num]['amount'] = matchAmount.group()
                     resutlDict[num]['date'] = date
-                # extraction.append(finalresult)
                 conn = create_connection(database)
                 with conn:
-                    # http://www.sqlitetutorial.net/sqlite-python/insert/
                     print("connection created")
                     # Date, Amount, Category, Sub Category, Payment Method, Description, 
                     # Ref/Check No, Payee / Payer, Status, Receipt Picture, Account, Tag, Tax, Mileage
@@ -105,6 +100,3 @@ if (is_connected()):
     print("Dictionary result", resutlDict)
 else:
     print("No Internet connection")
-
-    # INSERT INTO tempexpense(date,amount,category,sub_category,payment_method,description,ref_no,payee,status,receipt_picture,account,tag,tax,mileage)
-    # VALUES(2018/11/11, 307.1, 'Personal', 'Unknown', 'Debit Card', '', '', '','Cleared', '', 'Personal Expense', '', '', '')
