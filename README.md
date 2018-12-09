@@ -11,6 +11,7 @@ sqlite3 db.sqlite3 #db.sqlite3 is your own database filename
 <br>
 
 ```
+.mode csv
 .import data.csv table_name
 ```
 Provide your own table name and the actual path to the csv file and with ``.import`` command you can load all the data from the csv to database with the same existing format of your json
