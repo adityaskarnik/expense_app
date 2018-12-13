@@ -15,6 +15,9 @@ from .forms import SignUpForm
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 import os
+from .models import Expenses
+from django.core import serializers
+
 cwd = os.getcwd()
 User = get_user_model()
 
@@ -54,3 +57,10 @@ def index(request):
 
 # with open(cwd+'/expense_data.json') as d:
 #     data = json.load(d)
+
+def ajax_loaddata(request):
+    # with open(cwd+'/expense_data.json') as d:
+        # data = json.loads(d.read())
+    data = Expenses.objects.all()
+    json_data = serializers.serialize('json', data)
+    return HttpResponse(json_data, content_type='application/json')

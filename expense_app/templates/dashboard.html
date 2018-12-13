@@ -81,27 +81,13 @@
                     </div>
                 </div>
             </div>
-            {% if data %}
             
-            <table id="expense_table" class="table table-striped table-bordered" style="width:100%">
+            <table id="expense_table" class="table table-striped table-bordered" style="overflow: scroll; width:100%">
                 <thead>
-                    <tr>
-                        {% for k in data.0 %}
-                            <th>{{ k }}</th>
-                        {% endfor %}
-                    </tr>
                 </thead>    
                 <tbody>
-                    {% for k in data %}
-                    <tr>
-                        {% for key, value in k.items %}
-                            <td>{{ value }}</td>
-                        {% endfor %}
-                    </tr>
-                    {% endfor %}
                 </tbody>
             </table>
-            {% endif %}
         </div>
         <!-- /basic initialization -->
 
@@ -112,12 +98,12 @@
 </div>
 <!-- /main content -->
 
-<script type="text/javascript" language="javascript">
-    table = $(document).ready( function () {
-        $('#expense_table').DataTable({
-            scrollX:        true,
-		    scrollCollapse: true,
-		    fixedColumns:   true,
+<script type="text/javascript" language="javascript" class="init">
+    $(document).ready(function() {
+        $('#expense_table').dataTable( {
+            "scrollX": true,
+		    // "scrollCollapse": true,
+		    "fixedColumns":   true,
             "order": [[ 0, "desc" ]],
             buttons: {            
                 dom: {
@@ -130,8 +116,32 @@
                     'csvHtml5',
                     'pdfHtml5'
                 ]
-            },            
-        });
+            },
+            "paging": true,
+            // "serverSide": true,
+            "processing": true,
+            "ajax": {
+                "processing": true,
+                "url": "{% url 'ajax_loaddata' %}",
+                "dataSrc": ""
+            },
+            "columns": [
+                    { "data": "fields.date", "title": "Date"},
+                    { "data": "fields.amount" , "title": "Amount"},
+                    { "data": "fields.payee_payer" , "title": "Payee/Payer"},
+                    { "data": "fields.category" , "title": "Category"},
+                    { "data": "fields.sub_category" , "title": "Sub Category"},
+                    { "data": "fields.payment_method" , "title": "Payment Method"},
+                    { "data": "fields.description" , "title": "Description"},
+                    { "data": "fields.ref_checkno" , "title": "Ref/Check No"},
+                    { "data": "fields.status" , "title": "Status"},
+                    { "data": "fields.receipt_picture" , "title": "Receipt Picture"},
+                    { "data": "fields.account" , "title": "Accout"},
+                    { "data": "fields.tag" , "title": "Tag"},
+                    { "data": "fields.tax" , "title": "Tax"},
+                    { "data": "fields.mileage" , "title": "Mileage"}
+                ]
+        } );
     } );
 </script>
 {% endblock %}

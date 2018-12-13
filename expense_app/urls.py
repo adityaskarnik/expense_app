@@ -10,5 +10,6 @@ urlpatterns = [
     path('',auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     url(r'^login/',auth_views.LoginView.as_view(template_name='login.html'), name='login'),
     url(r'^register/', signup),
-    url(r'^logout/$', auth_views.LogoutView.as_view(template_name='logout.html'), name='logout')
+    url(r'^logout/$', auth_views.LogoutView.as_view(template_name='logout.html'), name='logout'),
+    path('databasequery/', views.ajax_loaddata, name='ajax_loaddata')
 ]
