@@ -10,98 +10,45 @@
 </script>
 {% endif %}
 <!-- Main content -->
-<div class="content-wrapper">
+<div class="content">
+    <div class="d-flex">
+        <div class="breadcrumb">
+            <a href="/expense_app/" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Dashboard</a>
+        </div>
     
-    <!-- Page header -->
-    <div class="page-header page-header-light">
-        <div class="page-header-content header-elements-md-inline">
-            <div class="page-title d-flex">
-                <h4><span class="font-weight-semibold">Dashboard</h4>
-                <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
-            </div>
-
-            <div class="header-elements d-none">
-                <div class="d-flex justify-content-center">
-                    <a href="#" class="btn btn-link btn-float text-default"><i class="icon-bars-alt text-primary"></i><span>Statistics</span></a>
-                    <a href="#" class="btn btn-link btn-float text-default"><i class="icon-calculator text-primary"></i> <span>Invoices</span></a>
-                    <a href="#" class="btn btn-link btn-float text-default"><i class="icon-calendar5 text-primary"></i> <span>Schedule</span></a>
-                </div>
-            </div>
-        </div>
-
-        <div class="breadcrumb-line breadcrumb-line-light header-elements-md-inline">
-            <div class="d-flex">
-                <div class="breadcrumb">
-                    <a href="index.html" class="breadcrumb-item"><i class="icon-home2 mr-2"></i> Dashboard</a>
-                </div>
-
-                <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a>
-            </div>
-
-            <div class="header-elements d-none">
-                <div class="breadcrumb justify-content-center">
-                    <a href="#" class="breadcrumb-elements-item">
-                        <i class="icon-comment-discussion mr-2"></i>
-                        Support
-                    </a>
-
-                    <div class="breadcrumb-elements-item dropdown p-0">
-                        <a href="#" class="breadcrumb-elements-item dropdown-toggle" data-toggle="dropdown">
-                            <i class="icon-gear mr-2"></i>
-                            Settings
-                        </a>
-
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a href="#" class="dropdown-item"><i class="icon-user-lock"></i> Account security</a>
-                            <a href="#" class="dropdown-item"><i class="icon-statistics"></i> Analytics</a>
-                            <a href="#" class="dropdown-item"><i class="icon-accessibility"></i> Accessibility</a>
-                            <div class="dropdown-divider"></div>
-                            <a href="#" class="dropdown-item"><i class="icon-gear"></i> All settings</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <!-- <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a> -->
     </div>
-    <!-- /page header -->
-
-
-    <!-- Content area -->
-    <div class="content">
-
-        <!-- Basic initialization -->
-        <div class="card">
-            <div class="card-header header-elements-inline">
-                <h5 class="card-title">All expenses </h5>
-                <div class="header-elements">
-                    <div class="list-icons">
-                        <a class="list-icons-item" data-action="collapse"></a>
-                        <a class="list-icons-item" data-action="reload"></a>
-                        <a class="list-icons-item" data-action="remove"></a>
-                    </div>
+    <!-- Basic initialization -->
+    <div class="card">
+        <div class="card-header header-elements-inline">
+            <h5 class="card-title">All expenses </h5>
+            <div class="header-elements">
+                <div class="list-icons">
+                    <a class="list-icons-item" data-action="collapse"></a>
+                    <a class="list-icons-item" data-action="reload"></a>
+                    <a class="list-icons-item" data-action="remove"></a>
                 </div>
             </div>
-            
-            <table id="expense_table" class="table table-striped table-bordered" style="overflow: scroll; width:100%">
+        </div>
+        <div class="table-responsive">
+            <table id="expense_table" class="table text-nowrap">
                 <thead>
                 </thead>    
                 <tbody>
                 </tbody>
             </table>
         </div>
-        <!-- /basic initialization -->
-
-
     </div>
-    <!-- /content area -->
+    <!-- /basic initialization -->
+
 
 </div>
 <!-- /main content -->
 
 <script type="text/javascript" language="javascript" class="init">
     $(document).ready(function() {
-        $('#expense_table').dataTable( {
-            "scrollX": true,
+        $('#expense_table').DataTable( {
+            scrollX: true,
 		    // "scrollCollapse": true,
 		    "fixedColumns":   true,
             "order": [[ 0, "desc" ]],
@@ -119,9 +66,9 @@
             },
             "paging": true,
             // "serverSide": true,
-            "processing": true,
+            // "processing": true,
             "ajax": {
-                "processing": true,
+                // "processing": true,
                 "url": "{% url 'ajax_loaddata' %}",
                 "dataSrc": ""
             },
@@ -140,7 +87,7 @@
                     { "data": "fields.tag" , "title": "Tag"},
                     { "data": "fields.tax" , "title": "Tax"},
                     { "data": "fields.mileage" , "title": "Mileage"}
-                ]
+                ],
         } );
     } );
 </script>

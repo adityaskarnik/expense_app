@@ -5,6 +5,7 @@
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<link rel="shortcut icon" type="image/x-icon" href="{% static '/global_assets/images/expense_app.png' %}" />
 	<title>{% block page-title %} Expense Manager {% endblock %}</title>
 	
     {% block head-css %}
@@ -18,21 +19,21 @@
 	<link href="{% static 'assets/css/colors.min.css' %}" rel="stylesheet" type="text/css">
 	
 	<!-- for datatables -->
-	<!-- <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css"> -->
+	<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.1/css/bootstrap.css">
 	<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
-	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
 	<script type="text/javascript" charset="utf8" src="https://code.jquery.com/jquery-3.3.1.js"></script>
+	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.min.js"></script>
 	<script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/dataTables.bootstrap4.min.js"></script>
 	<!-- /global stylesheets -->
 
 	<!-- Core JS files -->
-	<script src="{% static '/global_assets/js/main/jquery.min.js' %}"></script>
+	<!-- <script src="{% static '/global_assets/js/main/jquery.min.js' %}"></script> -->
 	<script src="{% static '/global_assets/js/main/bootstrap.bundle.min.js' %}"></script>
-	<script src="{% static '/global_assets/js/plugins/loaders/blockui.min.js' %}"></script>
+	<!-- <script src="{% static '/global_assets/js/plugins/loaders/blockui.min.js' %}"></script> -->
 	<!-- /core JS files -->
 
 	<!-- Theme JS files -->
-	<script src="{% static '/global_assets/js/plugins/tables/datatables/datatables.min.js' %}"></script>
+	<!-- <script src="{% static '/global_assets/js/plugins/tables/datatables/datatables.min.js' %}"></script> -->
 	<script src="{% static '/global_assets/js/plugins/forms/selects/select2.min.js' %}"></script>
 	<script src="{% static '/global_assets/js/plugins/tables/datatables/extensions/jszip/jszip.min.js' %}"></script>
 	<script src="{% static '/global_assets/js/plugins/tables/datatables/extensions/pdfmake/pdfmake.min.js' %}"></script>
@@ -52,7 +53,7 @@
 <body>
 	<div class="navbar navbar-expand-md navbar-dark">
 		<div class="navbar-brand">
-			<a href="index.html" class="d-inline-block">
+			<a href="/expense_app/" class="d-inline-block">
 				<img src="{% static '/global_assets/images/expense_app.png' %}" alt="">
 			</a>
 		</div>

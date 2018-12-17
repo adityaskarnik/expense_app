@@ -21,6 +21,9 @@ class Expenses(models.Model):
     tag = models.CharField(max_length=500)
     tax = models.CharField(max_length=500)
     mileage = models.CharField(max_length=500)
+
+    class Meta:
+        db_table = "Expenses"
     
     def __str__(self):
         return self.date, self.amount, self.category, self.sub_category, self.payment_method,
