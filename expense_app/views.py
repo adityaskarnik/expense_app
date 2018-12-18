@@ -23,8 +23,8 @@ User = get_user_model()
 
 # Create your views here.
 @login_required
-def dashboard(request):
-    return render(request, 'dashboard.html')
+def home(request):
+    return render(request, 'home.html')
 
 def signup(request):
     if request.method == 'POST':
