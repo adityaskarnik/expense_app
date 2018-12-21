@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% if user.is_authenticated %}
+
+{% else %}
+<script language="javascript">
+    window.location.href = "/"
+</script>
+{% endif %}
+
+<div class="content-wrapper">
+<div class="d-flex">
+        <div class="breadcrumb">
+            <a href="#" class="breadcrumb-item"><i class="icon-coins mr-2"></i> Top Expenses</a>
+        </div>
+    
+        <!-- <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a> -->
+    </div>
+<div class="col-sm-6 col-xl-3">
+        <div class="card card-body">
+            <div class="media">
+                <div class="mr-3 align-self-center">
+                    <i class="icon-pointer icon-3x text-success-400"></i>
+                </div>
+
+                <div class="media-body text-right">
+                    <h3 class="font-weight-semibold mb-0">652,549</h3>
+                    <span class="text-uppercase font-size-sm text-muted">total clicks</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-body">
+            <div class="media">
+                <div class="mr-3 align-self-center">
+                    <i class="icon-gas icon-3x text-success-400"></i>
+                </div>
+
+                <div class="media-body text-right">
+                    <h3 class="font-weight-semibold mb-0">652,549</h3>
+                    <span class="text-uppercase font-size-sm text-muted">total clicks</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card card-body">
+            <div class="media">
+                <div class="mr-3 align-self-center">
+                    <i class="icon-bus icon-3x text-success-400"></i>
+                </div>
+
+                <div class="media-body text-right">
+                    <h3 class="font-weight-semibold mb-0">652,549</h3>
+                    <span class="text-uppercase font-size-sm text-muted">total clicks</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
