@@ -26,6 +26,6 @@ class Expenses(models.Model):
         db_table = "Expenses"
     
     def __str__(self):
-        return self.date, self.amount, self.category, self.sub_category, self.payment_method,
+        return '%s %s %s %s %s %s %s %s %s %s %s %s %s %s' %(self.date, self.amount, self.category, self.sub_category, self.payment_method,
         self.description, self.ref_checkno, self.payee_payer, self.status, self.receipt_picture,
-        self.account, self.tag, self.tax, self.mileage
+        self.account, self.tag, self.tax, self.mileage)

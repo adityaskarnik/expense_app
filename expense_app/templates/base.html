@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
+{% load humanize %}
 <html lang="en">
 <head>
 	<meta charset="utf-8">
@@ -42,6 +43,16 @@
 
 	<script src="{% static 'assets/js/app.js' %}"></script>
 	<script src="{% static '/global_assets/js/demo_pages/datatables_extension_buttons_html5.js' %}"></script>
+
+	<script src="{% static '/global_assets/js/plugins/ui/moment/moment.min.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/pickers/daterangepicker.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/pickers/anytime.min.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/pickers/pickadate/picker.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/pickers/pickadate/picker.date.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/pickers/pickadate/picker.time.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/pickers/pickadate/legacy.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/notifications/jgrowl.min.js' %}"></script>
+	<script src="{% static '/global_assets/js/demo_pages/picker_date.js' %}"></script>
 	<!-- /theme JS files -->
 
     {% block theme-css %}
@@ -91,7 +102,7 @@
 				</li>
 			</ul>
 		</div>
-		<h4 class="btn btn-info daterange-ranges" id="demo"></h4>
+		<h4 class="btn btn-info daterange" id="demo"></h4>
     </div>
     
 
