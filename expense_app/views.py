@@ -18,6 +18,7 @@ import os
 from .models import Expenses
 from django.core import serializers
 from django.db.models import Sum
+from django.http import JsonResponse
 
 cwd = os.getcwd()
 User = get_user_model()
@@ -25,14 +26,14 @@ User = get_user_model()
 # Create your views here.
 @login_required
 def home(request):
-    food = Expenses.objects.filter(category='Food').aggregate(Sum('amount'))['amount__sum']
-    travel = Expenses.objects.filter(category='Travel').aggregate(Sum('amount'))['amount__sum']
-    personal = Expenses.objects.filter(category='Personal').aggregate(Sum('amount'))['amount__sum']
-    savings = Expenses.objects.filter(category='Savings').aggregate(Sum('amount'))['amount__sum']
-    entertainment = Expenses.objects.filter(category='Entertainment').aggregate(Sum('amount'))['amount__sum']
-    household = Expenses.objects.filter(category='Household').aggregate(Sum('amount'))['amount__sum']
-    healthcare = Expenses.objects.filter(category='Health Care').aggregate(Sum('amount'))['amount__sum']
-    utilities = Expenses.objects.filter(category='Utilities').aggregate(Sum('amount'))['amount__sum']
+    food = int(abs(Expenses.objects.filter(category='Food').aggregate(Sum('amount'))['amount__sum']))
+    travel = int(abs(Expenses.objects.filter(category='Travel').aggregate(Sum('amount'))['amount__sum']))
+    personal = int(abs(Expenses.objects.filter(category='Personal').aggregate(Sum('amount'))['amount__sum']))
+    savings = int(abs(Expenses.objects.filter(category='Savings').aggregate(Sum('amount'))['amount__sum']))
+    entertainment = int(abs(Expenses.objects.filter(category='Entertainment').aggregate(Sum('amount'))['amount__sum']))
+    household = int(abs(Expenses.objects.filter(category='Household').aggregate(Sum('amount'))['amount__sum']))
+    healthcare = int(abs(Expenses.objects.filter(category='Health Care').aggregate(Sum('amount'))['amount__sum']))
+    utilities = int(abs(Expenses.objects.filter(category='Utilities').aggregate(Sum('amount'))['amount__sum']))
     return render(request, 'home.html', {'food':food, 'travel':travel, 'personal':personal,
                                         'savings':savings, 'entertainment':entertainment,
                                         'household':household, 'healthcare':healthcare,
@@ -116,5 +117,20 @@ def delete_data(request):
 
 
 def date_wise_expense(request):
-    print("REQUEST", request)
-    return render(request, 'dashboard.html')
+    food = Expenses.objects.exclude(category='Income').filter(category="Food").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    travel = Expenses.objects.exclude(category='Income').filter(category="Travel").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    personal = Expenses.objects.exclude(category='Income').filter(category="Personal").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    savings = Expenses.objects.exclude(category='Income').filter(category="Savings").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    entertainment = Expenses.objects.exclude(category='Income').filter(category="Entertainment").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    household = Expenses.objects.exclude(category='Income').filter(category="Household").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    healthcare = Expenses.objects.exclude(category='Income').filter(category="Health Care").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    utilities = Expenses.objects.exclude(category='Income').filter(category="Utilities").filter(date__range=[request.GET['startdate'], request.GET['enddate']]).aggregate(Sum('amount'))['amount__sum']
+    return JsonResponse({'food':food, 'travel':travel, 'personal':personal,
+                                        'savings':savings, 'entertainment':entertainment,
+                                        'household':household, 'healthcare':healthcare,
+                                        'utilities':utilities})
+
+def startdate_enddate(request):
+    startdate = Expenses.objects.order_by('date')[0].date
+    enddate = Expenses.objects.latest('date').date
+    return JsonResponse({'startdate': startdate, 'enddate': enddate})

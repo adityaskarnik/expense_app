@@ -15,4 +15,5 @@ urlpatterns = [
     path('databasequery/', views.ajax_loaddata, name='ajax_loaddata'),
     path('delete_all/', views.delete_data, name='delete_all'),
     path('daterange/', views.date_wise_expense, name='date_wise_expense'),
+    path('startdate_enddate/', views.startdate_enddate, name='startdate_enddate'),
 ]

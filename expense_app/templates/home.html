@@ -32,7 +32,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ food }} ₹</h3>
+                        <h3 id="food" class="font-weight-semibold mb-0">{{ food }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On Food</span>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ travel }} ₹</h3>
+                        <h3 id="travel" class="font-weight-semibold mb-0">{{ travel }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On Travel</span>
                     </div>
                 </div>
@@ -61,7 +61,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ personal }} ₹</h3>
+                        <h3 id="personal" class="font-weight-semibold mb-0">{{ personal }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On Personal</span>
                     </div>
                 </div>
@@ -75,7 +75,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ savings }} ₹</h3>
+                        <h3 id="savings" class="font-weight-semibold mb-0">{{ savings }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On Savings</span>
                     </div>
                 </div>
@@ -91,7 +91,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ entertainment }} ₹</h3>
+                        <h3 id="entertainment" class="font-weight-semibold mb-0">{{ entertainment }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On entertainment</span>
                     </div>
                 </div>
@@ -106,7 +106,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ household }} ₹</h3>
+                        <h3 id="household" class="font-weight-semibold mb-0">{{ household }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On household</span>
                     </div>
                 </div>
@@ -120,7 +120,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ healthcare }} ₹</h3>
+                        <h3 id="healthcare" class="font-weight-semibold mb-0">{{ healthcare }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On healthcare</span>
                     </div>
                 </div>
@@ -134,7 +134,7 @@
                     </div>
 
                     <div class="media-body text-right">
-                        <h3 class="font-weight-semibold mb-0">{{ utilities|floatformat:"2" }} ₹</h3>
+                        <h3 id="utilities" class="font-weight-semibold mb-0">{{ utilities }} ₹</h3>
                         <span class="text-uppercase font-size-sm text-muted">On Utilities</span>
                     </div>
                 </div>
@@ -145,49 +145,65 @@
 <script>
 $(function() {
 
-    // var start = moment().subtract(29, 'days');
-    // var end = moment();
+    var start = moment().subtract(29, 'days');
+    var end = moment();
 
-    // function cb(start, end) {
-    //     $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
-    // }
+    function cb(start, end) {
+        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+    }
 
-    // $('#reportrange').daterangepicker({
-    //     startDate: start,
-    //     endDate: end,
-    //     ranges: {
-    //     'Today': [moment(), moment()],
-    //     'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-    //     'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-    //     'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-    //     'This Month': [moment().startOf('month'), moment().endOf('month')],
-    //     'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-    //     }
-    // }, cb);
+    $('#reportrange').daterangepicker({
+        startDate: start,
+        endDate: end,
+        ranges: {
+        'Today': [moment(), moment()],
+        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+        'This Month': [moment().startOf('month'), moment().endOf('month')],
+        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+        'Past Year': [moment().subtract(365, 'days'), moment().subtract(1, 'days')]
+        },
+        dateLimit: 365
+    }, cb);
 
-    // cb(start, end);
+    cb(start, end);
 
     $('#reportrange').on('apply.daterangepicker', function(ev, picker) {
         const Http = new XMLHttpRequest();
         const url='/daterange?';
-        // Http.open("GET", url);
-        // console.log(picker.startDate.format('YYYY/MM/DD'));
-        // console.log(picker.endDate.format('YYYY/MM/DD'));
-        // Http.send(picker.startDate.format('YYYY/MM/DD'),picker.endDate.format('YYYY/MM/DD'));
 
         $.ajax({
-        url: '/daterange/',
-        data: {
-          'startdate': picker.startDate.format('YYYY/MM/DD'),
-          'enddate' : picker.endDate.format('YYYY/MM/DD')
-        },
+            type: "GET",
+            url: '/daterange/',
+            data: {
+                'startdate': picker.startDate.format('YYYY/MM/DD'),
+                'enddate' : picker.endDate.format('YYYY/MM/DD')
+            },
+            dataType: 'json',
+            success: function (data) {
+                $("#food").replaceWith('<h3 id="food" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['food'])) + ' ₹</h3>')
+                $("#travel").replaceWith('<h3 id="travel" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['travel'])) + ' ₹</h3>')
+                $("#personal").replaceWith('<h3 id="personal" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['personal'])) + ' ₹</h3>')
+                $("#savings").replaceWith('<h3 id="savings" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['savings'])) + ' ₹</h3>')
+                $("#entertainment").replaceWith('<h3 id="entertainment" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['entertainment'])) + ' ₹</h3>')
+                $("#household").replaceWith('<h3 id="household" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['household'])) + ' ₹</h3>')
+                $("#healthcare").replaceWith('<h3 id="healthcare" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['healthcare'])) + ' ₹</h3>')
+                $("#utilities").replaceWith('<h3 id="utilities" class="font-weight-semibold mb-0">' + parseInt(Math.abs(+data['utilities'])) + ' ₹</h3>')
+            }
+      });
+    });
+
+    $.ajax({
+        type: "GET",
+        url: '/startdate_enddate/',
         dataType: 'json',
         success: function (data) {
-          if (data.is_taken) {
-            alert("A user with this username already exists.");
-          }
+            console.log(new Date(data['startdate']))
+            start = moment(new Date(data['startdate']), 'MMMM DD, YYYY');
+            end = moment(new Date(data['enddate']), 'MMMM DD, YYYY');
+            cb(start, end);
         }
-      });
     });
 });
 
