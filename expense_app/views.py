@@ -134,3 +134,13 @@ def startdate_enddate(request):
     startdate = Expenses.objects.order_by('date')[0].date
     enddate = Expenses.objects.latest('date').date
     return JsonResponse({'startdate': startdate, 'enddate': enddate})
+
+
+def add_expense(request):
+    p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=request.POST.get('category'), 
+            sub_category=request.POST.get('subcategory'), payment_method=request.POST.get('method'),
+            description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
+            status=request.POST.get('status'), receipt_picture='',
+            account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
+    p.save()
+    return JsonResponse({'data':"Data"})

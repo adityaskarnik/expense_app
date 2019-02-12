@@ -16,4 +16,5 @@ urlpatterns = [
     path('delete_all/', views.delete_data, name='delete_all'),
     path('daterange/', views.date_wise_expense, name='date_wise_expense'),
     path('startdate_enddate/', views.startdate_enddate, name='startdate_enddate'),
+    path('add_expense/', views.add_expense, name='add_expense'),
 ]

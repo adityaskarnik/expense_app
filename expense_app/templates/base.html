@@ -11,7 +11,7 @@
 	
     {% block head-css %}
 	<!-- Global stylesheets -->
-	<link href="https://fonts.googleapis.com/css?family=Tangerine" rel="stylesheet" type="text/css">
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" type="text/css">
 	<link href="{% static '/global_assets/css/icons/icomoon/styles.css' %}" rel="stylesheet" type="text/css">
 	<link href="{% static 'assets/css/bootstrap.min.css' %}" rel="stylesheet" type="text/css">
 	<link href="{% static 'assets/css/bootstrap_limitless.min.css' %}" rel="stylesheet" type="text/css">
@@ -53,6 +53,12 @@
 	<script src="{% static '/global_assets/js/plugins/pickers/pickadate/legacy.js' %}"></script>
 	<script src="{% static '/global_assets/js/plugins/notifications/jgrowl.min.js' %}"></script>
 	<script src="{% static '/global_assets/js/demo_pages/picker_date.js' %}"></script>
+
+	<!-- for notifications -->
+	<script src="{% static '/global_assets/js/plugins/notifications/jgrowl.min.js' %}"></script>
+	<script src="{% static '/global_assets/js/plugins/notifications/noty.min.js' %}"></script>
+	<script src="{% static 'assets/js/app.js' %}"></script>
+	<script src="{% static '/global_assets/js/demo_pages/extra_jgrowl_noty.js' %}"></script>
 	<!-- /theme JS files -->
 
     {% block theme-css %}

@@ -10,13 +10,245 @@
 {% endif %}
 
 <div class="content-wrapper">
-<div class="d-flex">
+    <div class="d-flex">
         <div class="breadcrumb">
             <a href="#" class="breadcrumb-item"><i class="icon-coins mr-2"></i> Top Expenses</a>
+            <ul class="fab-menu fab-menu-fixed fab-menu-top-right" data-fab-toggle="click">
+                <li>
+                    <a data-popup="tooltip" title="Add Expense" data-toggle="modal" data-target="#modal-login" class="fab-menu-btn btn bg-slate-800 btn-float rounded-round btn-icon">
+                        <i class="fab-icon-open icon-plus3"></i>
+                        <i class="fab-icon-close icon-cross2"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="modal-login" class="modal fade" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-slate-800">
+                        <h6 class="modal-title">Add Transaction</h6>
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    </div>
+
+                    <!-- Form -->
+                    <form class="modal-body" action="/add_expense/" method="POST" id="post-form">
+                        {% csrf_token %}
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="account" type="text" class="form-control" disabled="true" value="Personal Expense">
+                            <div class="form-control-feedback">
+                                <i class="icon-notebook text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="datesingle" type="text" class="form-control">
+                            <div class="form-control-feedback">
+                                <i class="icon-calendar22 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="amount" type="number" class="form-control" placeholder="Amount">
+                            <div class="form-control-feedback">
+                                ₹
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="payee" type="text" class="form-control" placeholder="Payee/Payer">
+                            <div class="form-control-feedback">
+                                <i class="icon-person text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <select id="category" class="form-control" placeholder="Category" name="category">
+                                <option value="" disabled selected hidden>Category</option>
+                                <option value="1">Automobile</option>
+                                <option value="2">Entertainment</option>
+                                <option value="3">Family</option>
+                                <option value="4">Food</option>
+                                <option value="5">Health Care</option>
+                                <option value="6">Home Office</option>
+                                <option value="7">Household</option>
+                                <option value="8">Insurance</option>
+                                <option value="9">Loans</option>
+                                <option value="10">Other</option>
+                                <option value="11">Personal</option>
+                                <option value="12">Savings</option>
+                                <option value="13">Tax</option>
+                                <option value="14">Travel</option>
+                                <option value="15">Utilities</option>
+                                <option value="16">Vacation</option>
+                            </select>
+                            <div class="form-control-feedback">
+                                <i class="icon-stack-empty text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <select id="sub-category" class="form-control" placeholder="Sub Category" name="sub-category">
+                                <option value="" disabled selected hidden>Sub Category</option>
+                                <option value="1">AAA or Road Services</option>
+                                <option value="1">Fuel</option>
+                                <option value="1">Insurance</option>
+                                <option value="1">Lease</option>
+                                <option value="1">Maintenance</option>
+                                <option value="1">Mileage</option>
+                                <option value="1">Registration</option>
+                                <option value="1">Other</option>
+                                <option value="2">Concert</option>
+                                <option value="2">Movies</option>
+                                <option value="2">Party</option>
+                                <option value="2">Sports</option>
+                                <option value="2">Other</option>
+                                <option value="3">Child Care</option>
+                                <option value="3">Child Education</option>
+                                <option value="3">Toy</option>
+                                <option value="3">Other</option>
+                                <option value="4">Drinks</option>
+                                <option value="4">Groceries</option>
+                                <option value="4">Other</option>
+                                <option value="4">Restaurant</option>
+                                <option value="4">Snacks</option>
+                                <option value="4">Breakfast</option>
+                                <option value="4">Tiffin</option>
+                                <option value="5">Dental</option>
+                                <option value="5">Eye Care</option>
+                                <option value="5">Health Insurance</option>
+                                <option value="5">Medical</option>
+                                <option value="5">Prescription</option>
+                                <option value="5">Nutrition</option>
+                                <option value="5">Other</option>
+                                <option value="6">Computer</option>
+                                <option value="6">Electronics</option>
+                                <option value="6">Stationary</option>
+                                <option value="6">Office Furniture</option>
+                                <option value="6">Office Supply</option>
+                                <option value="6">Other</option>
+                                <option value="7">Appliance</option>
+                                <option value="7">Consumables</option>
+                                <option value="7">Home Maintenance</option>
+                                <option value="7">Homeowner Fee</option>
+                                <option value="7">Household Tools</option>
+                                <option value="7">Misc Household Items</option>
+                                <option value="7">Other</option>
+                                <option value="7">Postage</option>
+                                <option value="7">Rent</option>
+                                <option value="8">Auto</option>
+                                <option value="8">Health</option>
+                                <option value="8">Home</option>
+                                <option value="8">Life</option>
+                                <option value="8">Other</option>
+                                <option value="9">Auto</option>
+                                <option value="9">Home Equity</option>
+                                <option value="9">Mortgage</option>
+                                <option value="9">Student</option>
+                                <option value="9">Other</option>
+                                <option value="10">Other</option>
+                                <option value="11">Clothing</option>
+                                <option value="11">Donation</option>
+                                <option value="11">Gift</option>
+                                <option value="11">Personal Care</option>
+                                <option value="11">Other</option>
+                                <option value="11">Lend</option>
+                                <option value="12">RD</option>
+                                <option value="12">PPF</option>
+                                <option value="12">LIC</option>
+                                <option value="13">Property Tax</option>
+                                <option value="13">Other</option>
+                                <option value="14">Airplane</option>
+                                <option value="14">Car Rental</option>
+                                <option value="14">Food</option>
+                                <option value="14">Hotel</option>
+                                <option value="14">Misc</option>
+                                <option value="14">Other</option>
+                                <option value="14">Other Transportation</option>
+                                <option value="14">Taxi</option>
+                                <option value="14">Bus</option>
+                                <option value="14">Metro</option>
+                                <option value="14">Train</option>
+                                <option value="15">Cable TV</option>
+                                <option value="15">Garbage</option>
+                                <option value="15">Electric</option>
+                                <option value="15">Gas</option>
+                                <option value="15">Internet</option>
+                                <option value="15">Telephone</option>
+                                <option value="15">Water</option>
+                                <option value="16">Airplane</option>
+                                <option value="16">Car Rental</option>
+                                <option value="16">Food</option>
+                                <option value="16">Hotel</option>
+                                <option value="16">Misc</option>
+                                <option value="16">Other Transportation</option>
+                                <option value="16">Taxi</option>
+                                <option value="16">Other</option>
+                            </select>
+                            <div class="form-control-feedback">
+                                <i class="icon-stack-empty text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <select id="method" class="form-control" placeholder="Payment Method" name="method">
+                                <option value="" disabled selected hidden>Payment Method</option>
+                                <option value="1">Cash</option>
+                                <option value="2">Check</option>
+                                <option value="3">Credit Card</option>
+                                <option value="4">Debit</option>
+                                <option value="5">Electronic Transfer</option>
+                            </select>
+                            <div class="form-control-feedback">
+                                <i class="icon-credit-card2 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <select id="status" class="form-control" placeholder="Status" name="status">
+                                <option value="" disabled selected hidden>Status</option>
+                                <option value="1">Cleared</option>
+                                <option value="2">Uncleared</option>
+                            </select>
+                            <div class="form-control-feedback">
+                                <i class="icon-check2 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="check-no" type="text" class="form-control" placeholder="Ref/Check No">
+                            <div class="form-control-feedback">
+                                <i class="icon-pencil7 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <select id="tag" class="form-control" placeholder="Tag" name="tag">
+                                <option value="" disabled selected hidden>Tag</option>
+                                <option value="1">Business</option>
+                                <option value="2">Vacation</option>
+                                <option value="3">Project</option>
+                                <option value="4">Client</option>
+                            </select>
+                            <div class="form-control-feedback">
+                                <i class="icon-price-tag2 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="tax" type="text" class="form-control" placeholder="Tax">
+                            <div class="form-control-feedback">
+                                <i class="icon-calculator3 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group form-group-feedback form-group-feedback-left">
+                            <input id="description" type="text" class="form-control" placeholder="Description">
+                            <div class="form-control-feedback">
+                                <i class="icon-file-text2 text-muted"></i>
+                            </div>
+                        </div>
+                        <div class="form-group">
+							<button type="submit" class="btn btn-primary btn-block">OK <i class="icon-circle-right2 ml-2"></i></button>
+						</div>
+                    </form>
+                    <!-- /form -->
+
+                </div>
+            </div>
         </div>
     
         <!-- <a href="#" class="header-elements-toggle text-default d-md-none"><i class="icon-more"></i></a> -->
     </div>
+
     <div class="form-group" style="display: flex; justify-content: flex-end">
         <button type="button" id="reportrange" class="btn btn-danger daterange-ranges">
             <i class="icon-calendar22 mr-2"></i>
@@ -205,8 +437,99 @@ $(function() {
             cb(start, end);
         }
     });
+
+    // DATE SELECTION FOR EXPENSE
+    $('#datesingle').click(function(){
+        $('#datesingle').pickadate({
+            onStart: function() {
+                var date = new Date()
+                this.setDate(date.getFullYear(), date.getMonth() + 1, date.getDate())
+            },
+            format: 'yyyy/mm/d'
+        });
+    });
+
+    // DEPENDENT DROPDOWN SELECTION 
+    var $select1 = $('#category'), 
+    $select2 = $('#sub-category'),
+    $options = $select2.find('option');
+        
+    $select1.on('change', function() {
+        $select2.html($options.filter('[value="' + this.value + '"]'));
+    }).trigger('change');
+
+
+    // adding transaction
+    $('#post-form').on('submit', function(event){
+        event.preventDefault();
+        console.log("submit")
+        console.log("FORM DATA",$('#post-form').serialize())
+        add_expense();
+
+    });
+    
+    function add_expense() {
+        console.log("create post is working!")
+        $.ajax({
+            url : "/add_expense/", 
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            type : "POST", // http method
+            dataType : 'json',
+            data : { 
+                account: $("#account").val(),
+                date: $("#datesingle").val(),
+                amount: $("#amount").val(),
+                payee: $("#payee").val(),
+                category: $("#category :selected").text(),
+                subcategory: $("#sub-category :selected").text(),
+                method: $("#method :selected").text(),
+                status: $("#status :selected").text(),
+                checkno: $("#check-no").val(),
+                tag: $("#tag :selected").text(),
+                tax: $("#tax").val(),
+                description: $("#description").val(),
+
+            },
+            // handle a successful response
+            success : function(data) {
+                $("#modal-login").modal('hide');
+                $.jGrowl("Expense Added Successfully", {
+					life: 5000,
+					theme:  'flora',
+                    speed:  'fast',
+                    position: 'top-right',
+					animateOpen: { 
+						height: "show",
+						width: "show"
+                    },
+                    close: function(e,m,o) {
+						$('#post-form')[0].reset();
+					},
+					animateClose: { 
+						height: "hide",
+						width: "hide"
+                    },
+                    
+                });
+            }
+        });
+    }
+
 });
 
 </script>
+<style type="text/css">
+    .jGrowl .flora {
+        background: 			green no-repeat;
+        -moz-border-radius: 	5px;
+        -webkit-border-radius:	5px;
+        opacity: 				50;
+        padding: 				10px;
+        overflow: 				hidden;
+        margin-top:             55px;
+        -webkit-text-stroke-color: white;
+        -webkit-text-fill-color: white;
+    }
+</style>
 
 {% endblock %}
