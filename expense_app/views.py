@@ -19,6 +19,7 @@ from .models import Expenses
 from django.core import serializers
 from django.db.models import Sum
 from django.http import JsonResponse
+from check_new_data import check_new_data
 
 cwd = os.getcwd()
 User = get_user_model()
@@ -26,18 +27,24 @@ User = get_user_model()
 # Create your views here.
 @login_required
 def home(request):
-    food = int(abs(Expenses.objects.filter(category='Food').aggregate(Sum('amount'))['amount__sum']))
-    travel = int(abs(Expenses.objects.filter(category='Travel').aggregate(Sum('amount'))['amount__sum']))
-    personal = int(abs(Expenses.objects.filter(category='Personal').aggregate(Sum('amount'))['amount__sum']))
-    savings = int(abs(Expenses.objects.filter(category='Savings').aggregate(Sum('amount'))['amount__sum']))
-    entertainment = int(abs(Expenses.objects.filter(category='Entertainment').aggregate(Sum('amount'))['amount__sum']))
-    household = int(abs(Expenses.objects.filter(category='Household').aggregate(Sum('amount'))['amount__sum']))
-    healthcare = int(abs(Expenses.objects.filter(category='Health Care').aggregate(Sum('amount'))['amount__sum']))
-    utilities = int(abs(Expenses.objects.filter(category='Utilities').aggregate(Sum('amount'))['amount__sum']))
-    return render(request, 'home.html', {'food':food, 'travel':travel, 'personal':personal,
-                                        'savings':savings, 'entertainment':entertainment,
-                                        'household':household, 'healthcare':healthcare,
-                                        'utilities':utilities})
+    if (len(Expenses.objects.all()) > 0):
+        food = int(abs(Expenses.objects.filter(category='Food').aggregate(Sum('amount'))['amount__sum']))
+        travel = int(abs(Expenses.objects.filter(category='Travel').aggregate(Sum('amount'))['amount__sum']))
+        personal = int(abs(Expenses.objects.filter(category='Personal').aggregate(Sum('amount'))['amount__sum']))
+        savings = int(abs(Expenses.objects.filter(category='Savings').aggregate(Sum('amount'))['amount__sum']))
+        entertainment = int(abs(Expenses.objects.filter(category='Entertainment').aggregate(Sum('amount'))['amount__sum']))
+        household = int(abs(Expenses.objects.filter(category='Household').aggregate(Sum('amount'))['amount__sum']))
+        healthcare = int(abs(Expenses.objects.filter(category='Health Care').aggregate(Sum('amount'))['amount__sum']))
+        utilities = int(abs(Expenses.objects.filter(category='Utilities').aggregate(Sum('amount'))['amount__sum']))
+        return render(request, 'home.html', {'food':food, 'travel':travel, 'personal':personal,
+                                            'savings':savings, 'entertainment':entertainment,
+                                            'household':household, 'healthcare':healthcare,
+                                            'utilities':utilities})
+    else:
+        return render(request, 'home.html', {'food':0, 'travel':0, 'personal':0,
+                                            'savings':0, 'entertainment':0,
+                                            'household':0, 'healthcare':0,
+                                            'utilities':0})
 
 def signup(request):
     if request.method == 'POST':
@@ -55,46 +62,25 @@ def signup(request):
     return render(request, 'register.html', {'form': form})
 
 def index(request):
-    tz = pytz.timezone('Asia/Kolkata')
-    now = datetime.now(tz)
-    str_now = str(now)
-    new_now = str(datetime.strptime(str_now.split(".")[0], '%Y-%m-%d %H:%M:%S'))
-    now = dateutil.parser.parse(new_now)
-    # html = "<html><body>It is now %s</body></html>" % now
-    t = get_template('dashboard.html')
-    # html = t.render({'current_date': now})
-    print(cwd+'/expense_data_new.json')
-    with open(cwd+'/expense_data_new.json') as d:
-        data = json.loads(d.read())
-    totalDataInDB = Expenses.objects.all().count()
-    if (len(data) > totalDataInDB):
-        for i in range(totalDataInDB, len(data)):
-            # print("inside for:")
-            #{'Date': '2017/01/23', 'Amount': -20, 'Category': 'Food & Drinks', 
-            # 'Sub Category': 'Snack', 'Payment Method': 'Cash', 'Description': '', 
-            # 'Ref/Check No': '', 'Payee / Payer': '', 'Status': 'Uncleared', 
-            # 'Receipt Picture': '', 'Account': 'Shopping Expense', 'Tag': '', 
-            # 'Tax': '', 'Mileage': ''}
-            # TODO in case of no table found operational error occurs delete the DB file
-            # TODO this for traccking changes in the csv from old to new
-            import pandas
-            # print("I",i, data[i]['Date'])
-            # This is TODO-ne adding to databse from json
-            p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=data[i]['Category'], 
-            sub_category=data[i]['Sub Category'], payment_method=data[i]['Payment Method'],
-            description=data[i]['Description'], ref_checkno=data[i]['Ref/Check No'], payee_payer=data[i]['Payee / Payer'], 
-            status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
-            account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
-            p.save()
-            print(p.id)
+    new_data = check_new_data('/home/adityakarnik/Downloads/2019-03-25_Expense Manager.csv')
+    if (new_data > 0):
+        file = cwd+'/expense_data.json'
+        with open(file) as d:
+            data = json.loads(d.read())
+            for i in range((len(data)-new_data),len(data)):
+                p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=data[i]['Category'], 
+                sub_category=data[i]['Sub Category'], payment_method=data[i]['Payment Method'],
+                description=data[i]['Description'], ref_checkno=data[i]['Ref/Check No'], payee_payer=data[i]['Payee / Payer'], 
+                status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
+                account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
+                p.save()
+            return render(request, 'dashboard.html', {'data':data})
     else:
         print("No change in the input data")
-            
-            
-    return render(request, 'dashboard.html', {'data':data})
-
-# with open(cwd+'/expense_data.json') as d:
-#     data = json.load(d)
+        file = cwd+'/expense_data.json'
+        with open(file) as d:
+            data = json.loads(d.read())
+            return render(request, 'dashboard.html', {'data':data})
 
 def ajax_loaddata(request):
     # with open(cwd+'/expense_data.json') as d:
@@ -144,3 +130,15 @@ def add_expense(request):
             account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
     p.save()
     return JsonResponse({'data':"Data"})
+
+def reset_db_index():
+    try:
+        import sqlite3
+        connection = sqlite3.connect("db.sqlite3")
+        cursor = connection.cursor()
+        delete_query = "delete from sqlite_sequence where name='Expenses';"
+        cursor.execute(delete_query)
+        return True
+    except Exception as e:
+        print("Exception", e)
+        return False

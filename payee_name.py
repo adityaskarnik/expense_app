@@ -34,8 +34,8 @@ def create_connection(db_file):
     return None
 
 def create_project(conn, expense):
-    sql = ''' INSERT INTO expenses(expense_date,amount,category,sub_category,payment_method,description,
-                ref_no,payee,status,receipt_picture,account,tag,tax,mileage)
+    sql = ''' INSERT INTO expenses(date,amount,category,sub_category,payment_method,description,
+                ref_checkno,payee_payer,status,receipt_picture,account,tag,tax,mileage)
     VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) '''
     cur = conn.cursor()
     cur.execute(sql, expense)
@@ -48,7 +48,7 @@ if (is_connected()):
     regexDate = r"[0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+"
     mail = imaplib.IMAP4_SSL('imap.gmail.com')
 
-    login = mail.login('budget.expenseapp@gmail.com', 'dscw1800')
+    login = mail.login('budget.expenseapp@gmail.com', 'dscw1800$')
 
     mail.select("inbox")
     resutlDict = {}
