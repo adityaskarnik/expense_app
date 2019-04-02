@@ -37,7 +37,7 @@
 
 <script type="text/javascript" language="javascript" class="init">
     $(document).ready(function() {
-        $('#expense_table').DataTable( {
+        var table = $('#expense_table').DataTable( {
             scrollX: true,
 		    // "scrollCollapse": true,
 		    "fixedColumns":   true,
@@ -79,6 +79,19 @@
                     { "data": "fields.mileage" , "title": "Mileage"}
                 ],
         } );
+
+        $.ajax({
+            type: "GET",
+            url: '/update_data/',
+            dataType: 'json',
+            success: function (data) {
+                console.log("data updated");
+                table.ajax.reload();
+            }, 
+            error: function(data) {
+                console.log("error occurred", data);
+            }
+        });
     } );
 </script>
 {% endblock %}

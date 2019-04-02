@@ -29,6 +29,7 @@ def check_new_data(new_file):
             print("CSV File converted successfully to JSON")
             with open(out_file) as d_new:
                 data_new = json.loads(d_new.read())
+                print(len(data_new),len(data))
                 if (len(data_new) > len(data)):
                     os.rename(old_filename, cwd+'/expense_data_old.json')
                     os.rename(out_file, cwd+'/expense_data.json')
@@ -37,3 +38,49 @@ def check_new_data(new_file):
         return 0
             
 # check_new_data(new)
+
+def download_new_attachment():
+    import imaplib
+    import re
+    from sys import getsizeof
+    import socket
+    import sqlite3
+    import os
+    import email
+    from datetime import datetime
+    cwd = os.getcwd()
+    
+    mail = imaplib.IMAP4_SSL('imap.gmail.com')
+    login = mail.login('budget.expenseapp@gmail.com', 'dscw1800$')
+
+    mail.select("inbox")
+    resutlDict = {}
+    result, data = mail.search(None, '(UNSEEN)', '(HEADER Subject "Manager.csv")')
+    try:
+        for num in data[0].split():
+            latest_email_uid = num
+            typ, data = mail.fetch(num, '(RFC822)')
+            raw_email = data[0][1]
+            resutlDict[num] = {}
+            raw_email = raw_email.decode('utf-8')
+            email_message = email.message_from_string(raw_email)
+            for part in email_message.walk():
+                # this part comes from the snipped I don't understand yet... 
+                if part.get_content_maintype() == 'multipart':
+                    continue
+                if part.get('Content-Disposition') is None:
+                    continue
+                fileName = part.get_filename()
+                if bool(fileName):
+                    filePath = os.path.join("/tmp", fileName)
+                    if not os.path.isfile(filePath) :
+                        fp = open(filePath, 'wb')
+                        fp.write(part.get_payload(decode=True))
+                        fp.close()
+
+                    subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
+                    print('Downloaded "{file}" from email titled "{subject}" with UID {uid}.'.format(file=fileName, subject=subject, uid=latest_email_uid.decode('utf-8')))
+    except Exception as e:
+        print("EXCEPTION DOWNLOADING ATTACHMENTS", e)
+
+download_new_attachment()

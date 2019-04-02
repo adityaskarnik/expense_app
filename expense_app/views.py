@@ -62,7 +62,13 @@ def signup(request):
     return render(request, 'register.html', {'form': form})
 
 def index(request):
-    new_data = check_new_data('/home/adityakarnik/Downloads/2019-03-25_Expense Manager.csv')
+    file = cwd+'/expense_data.json'
+    with open(file) as d:
+        data = json.loads(d.read())
+        return render(request, 'dashboard.html', {'data':data})
+
+def update_data(request):
+    new_data = check_new_data('/home/adityakarnik/Downloads/2019-04-01_Expense Manager.csv')
     if (new_data > 0):
         file = cwd+'/expense_data.json'
         with open(file) as d:
@@ -74,13 +80,13 @@ def index(request):
                 status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
                 account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
                 p.save()
-            return render(request, 'dashboard.html', {'data':data})
+            return JsonResponse({'data': data})
     else:
         print("No change in the input data")
         file = cwd+'/expense_data.json'
         with open(file) as d:
             data = json.loads(d.read())
-            return render(request, 'dashboard.html', {'data':data})
+            return JsonResponse({'data': data})
 
 def ajax_loaddata(request):
     # with open(cwd+'/expense_data.json') as d:
@@ -131,14 +137,3 @@ def add_expense(request):
     p.save()
     return JsonResponse({'data':"Data"})
 
-def reset_db_index():
-    try:
-        import sqlite3
-        connection = sqlite3.connect("db.sqlite3")
-        cursor = connection.cursor()
-        delete_query = "delete from sqlite_sequence where name='Expenses';"
-        cursor.execute(delete_query)
-        return True
-    except Exception as e:
-        print("Exception", e)
-        return False
