@@ -80,6 +80,7 @@ def download_new_attachment():
 
                     subject = str(email_message).split("Subject: ", 1)[1].split("\nTo:", 1)[0]
                     print('Downloaded "{file}" from email titled "{subject}" with UID {uid}.'.format(file=fileName, subject=subject, uid=latest_email_uid.decode('utf-8')))
+                    return filePath
     except Exception as e:
         print("EXCEPTION DOWNLOADING ATTACHMENTS", e)
 

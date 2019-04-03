@@ -19,7 +19,7 @@ from .models import Expenses
 from django.core import serializers
 from django.db.models import Sum
 from django.http import JsonResponse
-from check_new_data import check_new_data
+from check_new_data import check_new_data, download_new_attachment
 
 cwd = os.getcwd()
 User = get_user_model()
@@ -68,8 +68,8 @@ def index(request):
         return render(request, 'dashboard.html', {'data':data})
 
 def update_data(request):
-    new_data = check_new_data('/home/adityakarnik/Downloads/2019-04-01_Expense Manager.csv')
-    if (new_data > 0):
+    filepath = download_new_attachment()
+    if (filepath != None and check_new_data(filepath) > 0):
         file = cwd+'/expense_data.json'
         with open(file) as d:
             data = json.loads(d.read())
@@ -80,13 +80,13 @@ def update_data(request):
                 status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
                 account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
                 p.save()
-            return JsonResponse({'data': data})
+            return JsonResponse({'data': data, 'new': 'true'})
     else:
         print("No change in the input data")
         file = cwd+'/expense_data.json'
         with open(file) as d:
             data = json.loads(d.read())
-            return JsonResponse({'data': data})
+            return JsonResponse({'data': data, 'new': 'false'})
 
 def ajax_loaddata(request):
     # with open(cwd+'/expense_data.json') as d:

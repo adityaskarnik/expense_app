@@ -1,3 +1,6 @@
 __pycache__
 .vscode/
 venv/
+expense_data_old.json
+outJson.json
+*.pyc

@@ -85,8 +85,18 @@
             url: '/update_data/',
             dataType: 'json',
             success: function (data) {
-                console.log("data updated");
                 table.ajax.reload();
+                console.log(data.new);
+                if (data.new == 'true') {
+                    var notice = new PNotify({
+                        title: 'New data received',
+                        text: 'Data has be updated.',
+                        icon: 'icon-file-download',
+                        width: '280px',
+                        hide: true,
+                        addclass: 'alert bg-info text-black'
+                    });
+                }
             }, 
             error: function(data) {
                 console.log("error occurred", data);
