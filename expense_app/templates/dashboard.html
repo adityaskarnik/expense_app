@@ -79,7 +79,7 @@
                     { "data": "fields.mileage" , "title": "Mileage"}
                 ],
         } );
-
+        // var audio = new Audio('/home/adityakarnik/Music/quite-impressed.mp3');
         $.ajax({
             type: "GET",
             url: '/update_data/',
@@ -87,6 +87,7 @@
             success: function (data) {
                 table.ajax.reload();
                 console.log(data.new);
+                console.log("LENGTH",data.length)
                 if (data.new == 'true') {
                     var notice = new PNotify({
                         title: 'New data received',
@@ -96,6 +97,7 @@
                         hide: true,
                         addclass: 'alert bg-info text-black'
                     });
+                    // audio.play();
                 }
             }, 
             error: function(data) {

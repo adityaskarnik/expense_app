@@ -62,30 +62,34 @@ def signup(request):
     return render(request, 'register.html', {'form': form})
 
 def index(request):
+    data = []
     file = cwd+'/expense_data.json'
     with open(file) as d:
-        data = json.loads(d.read())
+        if not d: data = json.loads(d.read())
         return render(request, 'dashboard.html', {'data':data})
 
 def update_data(request):
     filepath = download_new_attachment()
-    if (filepath != None and check_new_data(filepath) > 0):
-        file = cwd+'/expense_data.json'
-        with open(file) as d:
-            data = json.loads(d.read())
-            for i in range((len(data)-new_data),len(data)):
-                p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=data[i]['Category'], 
-                sub_category=data[i]['Sub Category'], payment_method=data[i]['Payment Method'],
-                description=data[i]['Description'], ref_checkno=data[i]['Ref/Check No'], payee_payer=data[i]['Payee / Payer'], 
-                status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
-                account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
-                p.save()
-            return JsonResponse({'data': data, 'new': 'true'})
+    if (filepath != None):
+        new_data = check_new_data(filepath)
+        if (new_data > 0):
+            file = cwd+'/expense_data.json'
+            with open(file) as d:
+                data = json.loads(d.read())
+                for i in range((len(data)-new_data),len(data)):
+                    p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=data[i]['Category'], 
+                    sub_category=data[i]['Sub Category'], payment_method=data[i]['Payment Method'],
+                    description=data[i]['Description'], ref_checkno=data[i]['Ref/Check No'], payee_payer=data[i]['Payee / Payer'], 
+                    status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
+                    account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
+                    p.save()
+                return JsonResponse({'data': data, 'length': len(data), 'new': 'true'})
     else:
         print("No change in the input data")
+        data = []
         file = cwd+'/expense_data.json'
         with open(file) as d:
-            data = json.loads(d.read())
+            if not d: data = json.loads(d.read())
             return JsonResponse({'data': data, 'new': 'false'})
 
 def ajax_loaddata(request):
@@ -105,6 +109,7 @@ def insert_data(request):
 
 def delete_data(request):
     p = Expenses.objects.all().delete()
+    open(cwd+'/expense_data.json', 'w').close()
     return render(request, 'dashboard.html', {'p':p})
 
 

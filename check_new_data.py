@@ -22,19 +22,27 @@ def convert_csv_to_json(file):
         return None
 
 def check_new_data(new_file):
-    with open(old_filename) as d:        
-        data = json.loads(d.read())
-        out_file = convert_csv_to_json(new_file)
-        if (out_file is not None):
-            print("CSV File converted successfully to JSON")
-            with open(out_file) as d_new:
-                data_new = json.loads(d_new.read())
-                print(len(data_new),len(data))
-                if (len(data_new) > len(data)):
-                    os.rename(old_filename, cwd+'/expense_data_old.json')
-                    os.rename(out_file, cwd+'/expense_data.json')
-                    print("Old file renamed and New file generated")
-                    return (len(data_new) - len(data))
+    try:
+        data = []
+        print("old_filename",old_filename)
+        with open(old_filename) as d:
+            if os.path.getsize(old_filename) > 0:
+                data = json.load(d)
+            else: data = []
+            out_file = convert_csv_to_json(new_file)
+            if (out_file is not None):
+                print("CSV File converted successfully to JSON")
+                with open(out_file) as d_new:
+                    data_new = json.loads(d_new.read())
+                    print(len(data_new),len(data))
+                    if (len(data_new) > len(data)):
+                        os.rename(old_filename, cwd+'/expense_data_old.json')
+                        os.rename(out_file, cwd+'/expense_data.json')
+                        print("Old file renamed and New file generated")
+                        return (len(data_new) - len(data))
+            return 0
+    except Exception as e:
+        print("Exception in check_new_data", e)
         return 0
             
 # check_new_data(new)
@@ -44,7 +52,6 @@ def download_new_attachment():
     import re
     from sys import getsizeof
     import socket
-    import sqlite3
     import os
     import email
     from datetime import datetime
@@ -83,5 +90,3 @@ def download_new_attachment():
                     return filePath
     except Exception as e:
         print("EXCEPTION DOWNLOADING ATTACHMENTS", e)
-
-download_new_attachment()
