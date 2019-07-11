@@ -7,7 +7,15 @@ import os
 from datetime import datetime
 cwd = os.getcwd()
 database = cwd+"/db.sqlite3"
-print(database)
+definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails']}, 
+                'Travel': {'Taxi' : ['Uber','Zaak']}, 
+                'Utilities' : {'Telephone' : ['Vodafone'], 
+                'Internet' : ['ACTCORP', 'JIOMONEY']},
+                'Personal' : {'Clothing' : ['Myntra'], 'Others': ['DUNZO']}, 
+                'Home Office': {'Other': ['LINKEDIN', 'RESUME', 'Zety', 'AMAZON INTERNET']}, 
+                'Entertainment' : {'Other' : ['ITUNES', 'NETFLIX']},
+                'Household' : {'Rent' : ['rent']}
+                'Savings' : {'RD' : ['MonthlyRD'], 'PPF' : ['PPF']}}
 
 def is_connected():
     try:
@@ -63,13 +71,9 @@ if (is_connected()):
                 matchAmount = re.search(regexAmount, raw_email)
             except:
                 raw_email = raw_email.decode('utf-8')
-                print("RAW EMAIL",raw_email)
                 matchPayeeName = re.search(regexPayeeName, raw_email)
-                print("PAYEE",matchPayeeName)
                 matchAmount = re.search(regexAmount, raw_email)
-                print("AMOUNT",matchAmount)
                 matchDate = re.search(regexDate, raw_email)
-                print("DATE",matchDate)
 
                 # TODO add condition to skip ATD payee type
 
@@ -82,7 +86,10 @@ if (is_connected()):
 
                 except Exception as e:
                     print ("Finalresult Exception", e)
-                    date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%Y').strftime('%Y/%m/%d')
+                    try:
+                        date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%Y').strftime('%Y/%m/%d')
+                    except:
+                        date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%y').strftime('%Y/%m/%d')
                     resutlDict[num]['payee'] = " ".join(matchPayeeName.group().split())
                     resutlDict[num]['amount'] = matchAmount.group()
                     resutlDict[num]['date'] = date
@@ -93,7 +100,22 @@ if (is_connected()):
                     # Ref/Check No, Payee / Payer, Status, Receipt Picture, Account, Tag, Tax, Mileage
                     # create a new project
                     finalPayee = " ".join(matchPayeeName.group().split())
-                    expense = (date, "-"+str(matchAmount.group()), 'Personal', 'Unknown', 'Debit Card', '', '', finalPayee,
+                    # knownPayee = [value for key, value in definedPayees.items() if value in finalPayee]
+                    # knownCategory = [key for key, value in definedPayees.items() if value in finalPayee]
+                    knownPayee = [payee for category,subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
+                    knownCategory = [category for category,subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
+                    knownSubcategory = [subc for category,subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
+                    if len(knownPayee) > 0:
+                        finalPayee = knownPayee[0]
+                    if len(knownCategory) > 0:
+                        category = knownCategory[0]
+                    else:
+                        category = 'Unknown'
+                    if len(knownSubcategory) > 0:
+                        subCategory = knownSubcategory[0]
+                    else:
+                        subCategory = 'Unknown'
+                    expense = (date, "-"+str(matchAmount.group()), category, subCategory, 'Debit', '', '', finalPayee,
                     'Cleared', '', 'Personal Expense', '', '', '')
                     create_project(conn, expense)
             else: 
@@ -102,6 +124,5 @@ if (is_connected()):
     except Exception as e:
         print("Exception", e)
 
-    print("Dictionary result", resutlDict)
 else:
     print("No Internet connection")
