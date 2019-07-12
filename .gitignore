@@ -5,3 +5,4 @@ expense_data_old.json
 outJson.json
 *.pyc
 expense_manager/__pycache__/wsgi.cpython-36.pyc
+.idea/

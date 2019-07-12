@@ -6,7 +6,7 @@ Click==7.0
 colorama==0.4.0
 DataProperty==0.35.2
 decorator==4.3.0
-Django==2.1.2
+Django==2.1.10
 django-datatable==0.3.1
 django-tables2==2.0.2
 Faker==1.0.0
@@ -39,5 +39,5 @@ tabledata==0.0.24
 text-unidecode==1.2
 traitlets==4.3.2
 typepy==0.3.0
-urllib3==1.24.1
+urllib3==1.24.2
 xlrd==1.1.0
