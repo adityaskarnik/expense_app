@@ -28,6 +28,11 @@ app = Celery('check_expense_file')
 cwd = os.getcwd()
 User = get_user_model()
 
+from elasticsearch import Elasticsearch
+index = 'expense_mail_checker'
+doc_type = 'mail_checker'
+es = Elasticsearch('http://127.0.0.1:9200/')
+
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(crontab(hour='*/6'),mail_checker.s())
@@ -93,6 +98,22 @@ def update_data(request):
                     status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
                     account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
                     p.save()
+                    expense = {}
+                    expense['date'] = data[i]['Date']
+                    expense['amount'] = data[i]['Amount']
+                    expense['category'] = data[i]['Category']
+                    expense['sub_category'] = data[i]['Sub Category']
+                    expense['payment_method'] = data[i]['Payment Method']
+                    expense['description'] = data[i]['Description']
+                    expense['ref_checkno'] = data[i]['Ref/Check No']
+                    expense['payee_payer'] = data[i]['Payee / Payer']
+                    expense['status'] = data[i]['Status']
+                    expense['receipt_picture'] = data[i]['Receipt Picture']
+                    expense['account'] = data[i]['Account']
+                    expense['tag'] = data[i]['Tag']
+                    expense['tax'] = data[i]['Tax']
+                    expense['mileage'] = data[i]['Mileage']
+                    es.index(index=index, doc_type=doc_type, body=expense)
                 return JsonResponse({'data': data, 'length': len(data), 'new': 'true'})
     else:
         print("No change in the input data")
@@ -150,5 +171,21 @@ def add_expense(request):
             status=request.POST.get('status'), receipt_picture='',
             account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
     p.save()
+    expense = {}
+    expense['date'] = request.POST.get('date')
+    expense['amount'] = request.POST.get('amount')
+    expense['category'] = request.POST.get('category')
+    expense['sub_category'] = request.POST.get('subcategory')
+    expense['payment_method'] = request.POST.get('method')
+    expense['description'] = request.POST.get('description')
+    expense['ref_checkno'] = request.POST.get('checkno')
+    expense['payee_payer'] = request.POST.get('payee')
+    expense['status'] = request.POST.get('status')
+    expense['receipt_picture'] = ''
+    expense['account'] = request.POST.get('account')
+    expense['tag'] = request.POST.get('tag')
+    expense['tax'] = request.POST.get('tax')
+    expense['mileage'] = ''
+    es.index(index=index, doc_type=doc_type, body=expense)
     return JsonResponse({'data':"Data"})
 

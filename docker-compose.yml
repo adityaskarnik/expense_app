@@ -1,0 +1,53 @@
+version: '2.3'
+services:
+  expense_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: python3 manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8100:8100"
+    container_name: expense_app
+  elasticsearch:
+    build:
+      context: ../expense_elk/elasticsearch/
+      args:
+        ELK_VERSION: 7.0.1
+    volumes:
+      - ../expense_elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+      - /etc/timezone:/etc/timezone
+      - ../expense_elk/elasticsearch/data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx2560m -Xms2560m"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      http.cors.enabled: "true"
+      http.cors.allow-origin: "*"
+    networks:
+      - expense_network
+
+  kibana:
+    build:
+      context: ../expense_elk/kibana/
+      args:
+        ELK_VERSION: 7.0.1
+    volumes:
+      - ../expense_elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - /etc/timezone:/etc/timezone
+    ports:
+      - "5601:5601"
+    networks:
+      - expense_network
+    depends_on:
+      - elasticsearch
+
+  
+volumes:
+  expense_elk_db_data:
+    external: true
+  
+networks:
+  expense_network:
+    driver: overlay
