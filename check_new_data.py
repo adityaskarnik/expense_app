@@ -58,7 +58,7 @@ def download_new_attachment():
     cwd = os.getcwd()
     
     mail = imaplib.IMAP4_SSL('imap.gmail.com')
-    login = mail.login('budget.expenseapp@gmail.com', 'dscw1800$')
+    login = mail.login('budget.expenseapp@gmail.com', os.environ["BUDGET_PASSWORD"])
 
     mail.select("inbox")
     resutlDict = {}

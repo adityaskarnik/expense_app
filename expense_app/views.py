@@ -20,9 +20,18 @@ from django.core import serializers
 from django.db.models import Sum
 from django.http import JsonResponse
 from check_new_data import check_new_data, download_new_attachment
+from celery import Celery
+from celery.schedules import crontab
+
+app = Celery('check_expense_file')
 
 cwd = os.getcwd()
 User = get_user_model()
+
+@app.on_after_configure.connect
+def setup_periodic_tasks(sender, **kwargs):
+    sender.add_periodic_task(crontab(hour='*/6'),mail_checker.s())
+    # sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
 
 # Create your views here.
 @login_required
@@ -68,6 +77,7 @@ def index(request):
         if not d: data = json.loads(d.read())
         return render(request, 'dashboard.html', {'data':data})
 
+@app.task
 def update_data(request):
     filepath = download_new_attachment()
     if (filepath != None):
