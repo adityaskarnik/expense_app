@@ -24,7 +24,7 @@ definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails'
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(hour='*/6'),mail_checker.s())
+    sender.add_periodic_task(crontab(hour='*/3'),mail_checker.s())
     # sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
 
 def is_connected():
