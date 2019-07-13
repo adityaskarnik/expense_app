@@ -1,8 +1,13 @@
-FROM python:3.7-alpine
+FROM python:3.7
 
-COPY ./expense_app /app
+MAINTAINER adityakarnik
+
+COPY . /app/
+
 WORKDIR /app
 
 RUN pip install -r requirements.txt
 
-CMD python manage.py runserver 0.0.0.0:8100
+EXPOSE 8100
+
+CMD celery worker -A payee_name -l INFO --beat --concurrency=2 -n 'main_app'

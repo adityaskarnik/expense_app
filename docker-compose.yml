@@ -4,10 +4,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python3 manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8100
+    volumes:
+      - .:/app
     ports:
       - "8100:8100"
+    environment:
+      BUDGET_PASSWORD: ${BUDGET_PASSWORD}
     container_name: expense_app
+    networks:
+      - expense_network
   elasticsearch:
     build:
       context: ../expense_elk/elasticsearch/
@@ -22,7 +28,7 @@ services:
       - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx2560m -Xms2560m"
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD}
+      ELASTIC_PASSWORD: Dscw1800
       http.cors.enabled: "true"
       http.cors.allow-origin: "*"
     networks:
@@ -45,7 +51,7 @@ services:
 
   
 volumes:
-  expense_elk_db_data:
+  expense_elk_data:
     external: true
   
 networks:
