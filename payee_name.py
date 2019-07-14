@@ -12,7 +12,7 @@ app = Celery('mail_checker')
 
 cwd = os.getcwd()
 database = cwd+"/db.sqlite3"
-definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails']}, 
+definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails', 'ONE97']}, 
                 'Travel': {'Taxi' : ['Uber','Zaak']}, 
                 'Utilities' : {'Telephone' : ['Vodafone'], 
                 'Internet' : ['ACTCORP', 'JIOMONEY']},
@@ -24,7 +24,7 @@ definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails'
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(hour='*/3'),mail_checker.s())
+    sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
     # sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
 
 def is_connected():
@@ -65,16 +65,17 @@ def mail_checker():
     if (is_connected()):
         print('Process started')
         # global regex pattern for the getting payee name from mail
-        regexPayeeName = r"((?<=PCA:[0-9]{10}:).*(?=Available))|((?<=(to|To)):?[0-9a-zA-Z.\s@\/]+((?=UTRNO)|(?=Available)))"
-        regexAmount = r"((?<=INR\s).*(?=\sDebited))|(?<=INR\s).*(?=\shas)"
-        regexDate = r"[0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+"
+        regexPayeeName = r"((?<=PCA:[0-9]{10}:).*(?=Available))|((?<=(to|To)):?[0-9a-zA-Z.\s@\/]+((?=UTRNO)|(?=Available)))|((?<=at).*(?=txn))"
+        regexAmount = r"((?<=INR\s).*(?=\sDebited))|(?<=INR\s).*(?=\shas)|((?<=Rs).*(?=\son))"
+        regexDate = r"((?<=;).*\n?.*(?=\+0530))|([0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+)"
         mail = imaplib.IMAP4_SSL('imap.gmail.com')
 
         login = mail.login('budget.expenseapp@gmail.com', os.environ["BUDGET_PASSWORD"])
 
         mail.select("inbox")
         resutlDict = {}
-        result, data = mail.search(None, '(UNSEEN)', '(FROM "alerts@yesbank.in" OR FROM "aditya.s.karnik@gmail.com" HEADER Subject "Debit Alert")')
+        result, data = mail.search(None, '(UNSEEN)', '(FROM "alerts@yesbank.in" OR FROM "aditya.s.karnik@gmail.com" OR FROM "donotreply.sbiatm@sbi.co.in" HEADER Subject "Debit Alert" OR HEADER Subject "Transaction alert for your State Bank of India Debit Card")')
+        # result, data = mail.search(None, '(UNSEEN)', '(FROM "donotreply.sbiatm@sbi.co.in" HEADER Subject "Transaction alert for your State Bank of India Debit Card")')
         try:
             for num in data[0].split():
                 typ, data = mail.fetch(num, '(RFC822)')
@@ -103,7 +104,11 @@ def mail_checker():
                         try:
                             date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%Y').strftime('%Y/%m/%d')
                         except:
-                            date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%y').strftime('%Y/%m/%d')
+                            try:
+                                date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%y').strftime('%Y/%m/%d')
+                            except:
+                                dd = ' '.join(matchDate.group().split()).replace(',','')
+                                date = datetime.strptime(dd,'%a %d %b %Y %H:%M:%S').strftime('%Y/%m/%d')
                         resutlDict[num]['payee'] = " ".join(matchPayeeName.group().split())
                         resutlDict[num]['amount'] = matchAmount.group()
                         resutlDict[num]['date'] = date
