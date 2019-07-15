@@ -29,13 +29,13 @@ cwd = os.getcwd()
 User = get_user_model()
 
 from elasticsearch import Elasticsearch
-index = 'expense_mail_checker'
+index = 'expensemailchecker'
 doc_type = 'mail_checker'
-es = Elasticsearch('http://127.0.0.1:9200/')
+es = Elasticsearch('elastic:Dscw1800@elasticsearch:9200/')
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(hour='*/6'),mail_checker.s())
+    sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
     # sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
 
 # Create your views here.

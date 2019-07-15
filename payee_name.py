@@ -67,15 +67,14 @@ def mail_checker():
         # global regex pattern for the getting payee name from mail
         regexPayeeName = r"((?<=PCA:[0-9]{10}:).*(?=Available))|((?<=(to|To)):?[0-9a-zA-Z.\s@\/]+((?=UTRNO)|(?=Available)))|((?<=at).*(?=txn))"
         regexAmount = r"((?<=INR\s).*(?=\sDebited))|(?<=INR\s).*(?=\shas)|((?<=Rs).*(?=\son))"
-        regexDate = r"((?<=;).*\n?.*(?=\+0530))|([0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+)"
+        regexDate = r"((?<=;).*\n?.*(?=\+0530))|((?<=Date:).*\n?.*(?<=(AM)|(PM)))|([0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+)"
         mail = imaplib.IMAP4_SSL('imap.gmail.com')
 
         login = mail.login('budget.expenseapp@gmail.com', os.environ["BUDGET_PASSWORD"])
 
         mail.select("inbox")
         resutlDict = {}
-        result, data = mail.search(None, '(UNSEEN)', '(FROM "alerts@yesbank.in" OR FROM "aditya.s.karnik@gmail.com" OR FROM "donotreply.sbiatm@sbi.co.in" HEADER Subject "Debit Alert" OR HEADER Subject "Transaction alert for your State Bank of India Debit Card")')
-        # result, data = mail.search(None, '(UNSEEN)', '(FROM "donotreply.sbiatm@sbi.co.in" HEADER Subject "Transaction alert for your State Bank of India Debit Card")')
+        result, data = mail.search(None, '(UNSEEN)', '((OR HEADER Subject "Transaction alert for your State Bank of India Debit Card" HEADER Subject "Debit Alert"))')
         try:
             for num in data[0].split():
                 typ, data = mail.fetch(num, '(RFC822)')
@@ -146,3 +145,6 @@ def mail_checker():
 
     else:
         print("No Internet connection")
+
+
+mail_checker()
