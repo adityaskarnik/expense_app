@@ -29,8 +29,8 @@ cwd = os.getcwd()
 User = get_user_model()
 
 from elasticsearch import Elasticsearch
-index = 'expensemailchecker'
-doc_type = 'mail_checker'
+index_name = 'expense_mail_checker'
+doc_type = 'mailchecker'
 es = Elasticsearch('elastic:Dscw1800@elasticsearch:9200/')
 
 @app.on_after_configure.connect
@@ -113,7 +113,7 @@ def update_data(request):
                     expense['tag'] = data[i]['Tag']
                     expense['tax'] = data[i]['Tax']
                     expense['mileage'] = data[i]['Mileage']
-                    es.index(index=index, doc_type=doc_type, body=expense)
+                    es.index(index=index_name, doc_type=doc_type, body=expense)
                 return JsonResponse({'data': data, 'length': len(data), 'new': 'true'})
     else:
         print("No change in the input data")
@@ -171,6 +171,7 @@ def add_expense(request):
             status=request.POST.get('status'), receipt_picture='',
             account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
     p.save()
+    
     expense = {}
     expense['date'] = request.POST.get('date')
     expense['amount'] = request.POST.get('amount')
@@ -186,6 +187,7 @@ def add_expense(request):
     expense['tag'] = request.POST.get('tag')
     expense['tax'] = request.POST.get('tax')
     expense['mileage'] = ''
-    es.index(index=index, doc_type=doc_type, body=expense)
+    es.index(index=index_name, doc_type=doc_type, body=expense)
+    
     return JsonResponse({'data':"Data"})
 
