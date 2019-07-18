@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: python manage.py runserver 0.0.0.0:8100
+    command: bash -c "python manage.py runserver 0.0.0.0:8100 && celery worker -A payee_name -l INFO --beat --concurrency=2 -n 'main_app'"
     volumes:
       - .:/app
     ports:
@@ -14,6 +14,21 @@ services:
     container_name: expense_app
     networks:
       - expense_network
+    restart:
+      always  
+    
+  
+  rabbitmq:
+    image: 'bitnami/rabbitmq:3.7'
+    ports:
+      - '5672:5672'
+      - '15672:15672'
+    volumes:
+      - 'expense_elk_data:/bitnami'
+    networks:
+      - expense_network
+    restart:
+      always
 
   elasticsearch:
     build:
@@ -34,6 +49,8 @@ services:
       http.cors.allow-origin: "*"
     networks:
       - expense_network
+    restart:
+      always
 
   kibana:
     build:
@@ -49,6 +66,8 @@ services:
       - expense_network
     depends_on:
       - elasticsearch
+    restart:
+      always
 
   
 volumes:
