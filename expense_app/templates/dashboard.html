@@ -68,22 +68,23 @@
                     <div class="form-group form-group-feedback form-group-feedback-left">
                         <select id="category" class="form-control" placeholder="Category" name="category">
                             <option value="" disabled selected hidden>Category</option>
-                            <option value="1">Automobile</option>
-                            <option value="2">Entertainment</option>
-                            <option value="3">Family</option>
-                            <option value="4">Food</option>
-                            <option value="5">Health Care</option>
-                            <option value="6">Home Office</option>
-                            <option value="7">Household</option>
-                            <option value="8">Insurance</option>
-                            <option value="9">Loans</option>
-                            <option value="10">Other</option>
-                            <option value="11">Personal</option>
-                            <option value="12">Savings</option>
-                            <option value="13">Tax</option>
-                            <option value="14">Travel</option>
-                            <option value="15">Utilities</option>
-                            <option value="16">Vacation</option>
+                            <option value="Automobile">Automobile</option>
+                            <option value="Entertainment">Entertainment</option>
+                            <option value="Family">Family</option>
+                            <option value="Food">Food</option>
+                            <option value="Health Care">Health Care</option>
+                            <option value="Home Office">Home Office</option>
+                            <option value="Household">Household</option>
+                            <option value="Insurance">Insurance</option>
+                            <option value="Loans">Loans</option>
+                            <option value="Other">Other</option>
+                            <option value="Personal">Personal</option>
+                            <option value="Savings">Savings</option>
+                            <option value="Tax">Tax</option>
+                            <option value="Travel">Travel</option>
+                            <option value="Utilities">Utilities</option>
+                            <option value="Vacation">Vacation</option>
+                            <option value="Unknown">Unknown</option>
                         </select>
                         <div class="form-control-feedback">
                             <i class="icon-stack-empty text-muted"></i>
@@ -194,11 +195,11 @@
                     <div class="form-group form-group-feedback form-group-feedback-left">
                         <select id="method" class="form-control" placeholder="Payment Method" name="method">
                             <option value="" disabled selected hidden>Payment Method</option>
-                            <option value="1">Cash</option>
-                            <option value="2">Check</option>
-                            <option value="3">Credit Card</option>
-                            <option value="4">Debit</option>
-                            <option value="5">Electronic Transfer</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Check">Check</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Debit">Debit</option>
+                            <option value="Electronic Transfer">Electronic Transfer</option>
                         </select>
                         <div class="form-control-feedback">
                             <i class="icon-credit-card2 text-muted"></i>
@@ -207,8 +208,8 @@
                     <div class="form-group form-group-feedback form-group-feedback-left">
                         <select id="status" class="form-control" placeholder="Status" name="status">
                             <option value="" disabled selected hidden>Status</option>
-                            <option value="1">Cleared</option>
-                            <option value="2">Uncleared</option>
+                            <option value="Cleared">Cleared</option>
+                            <option value="Uncleared">Uncleared</option>
                         </select>
                         <div class="form-control-feedback">
                             <i class="icon-check2 text-muted"></i>
@@ -223,10 +224,10 @@
                     <div class="form-group form-group-feedback form-group-feedback-left">
                         <select id="tag" class="form-control" placeholder="Tag" name="tag">
                             <option value="" disabled selected hidden>Tag</option>
-                            <option value="1">Business</option>
-                            <option value="2">Vacation</option>
-                            <option value="3">Project</option>
-                            <option value="4">Client</option>
+                            <option value="Business">Business</option>
+                            <option value="Vacation">Vacation</option>
+                            <option value="Project">Project</option>
+                            <option value="Client">Client</option>
                         </select>
                         <div class="form-control-feedback">
                             <i class="icon-price-tag2 text-muted"></i>
@@ -290,7 +291,21 @@
 
                     {
                         mRender: function (data, type, row) {
-                            return '<a data-popup="tooltip" title="Edit Expense" data-toggle="modal" data-target="#modal-edit-expense" class="btn icon-pencil">'
+                            console.log("ROW DATA",row.fields);
+                            console.log("ROW DATE",row.fields.date);
+                            $(".modal-body #datesingle").val(row.fields.date);
+                            $(".modal-body #amount").val(row.fields.amount);
+                            $(".modal-body #payee").val(row.fields.payee_payer);
+                            $(".modal-body #category").val(row.fields.category);
+                            $(".modal-body #sub-category").val(row.fields.sub_category);
+                            $(".modal-body #method").val(row.fields.payment_method);
+                            $(".modal-body #check-no").val(row.fields.ref_checkno);
+                            $(".modal-body #tag").val(row.fields.tag);
+                            $(".modal-body #tax").val(row.fields.tax);
+                            $(".modal-body #status").val(row.fields.status);
+                            $(".modal-body #description").val(row.fields.description);
+                            var item = '<a data-popup="tooltip" title="Edit Expense" data-toggle="modal" data-target="#modal-edit-expense" class="btn icon-pencil">'
+                            return item
                         }
                     },
                     { "data": "fields.date", "title": "Date"},
@@ -335,5 +350,10 @@
             }
         });
     } );
+
+    $('.modal-edit-expense').on('hidden.bs.modal', function(e)
+    { 
+        $(this).removeData();
+    }) ;
 </script>
 {% endblock %}
