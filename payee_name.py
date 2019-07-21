@@ -8,7 +8,8 @@ from datetime import datetime
 from celery import Celery
 from celery.schedules import crontab
 
-app = Celery('mail_checker')
+app = Celery('mail_checker',
+            broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
 
 cwd = os.getcwd()
 database = cwd+"/db.sqlite3"
@@ -24,8 +25,8 @@ definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails'
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
-    # sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
+    # sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
+    sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
 
 def is_connected():
     try:
@@ -145,6 +146,3 @@ def mail_checker():
 
     else:
         print("No Internet connection")
-
-
-mail_checker()

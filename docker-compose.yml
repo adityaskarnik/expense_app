@@ -4,14 +4,39 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c "python manage.py runserver 0.0.0.0:8100 && celery worker -A payee_name -l INFO --beat --concurrency=2 -n 'main_app'"
+    command: bash -c "python manage.py runserver 0.0.0.0:8100"
     volumes:
       - .:/app
     ports:
       - "8100:8100"
     environment:
       BUDGET_PASSWORD: ${BUDGET_PASSWORD}
+    depends_on:
+      - expense_worker
+      - elasticsearch
     container_name: expense_app
+    networks:
+      - expense_network
+    restart:
+      always
+
+  expense_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: bash -c "celery worker -A payee_name -l INFO --beat --concurrency=1 -n 'main_app'"
+    volumes:
+      - .:/app
+    ports:
+      - "8200:8200"
+    environment:
+      BUDGET_PASSWORD: ${BUDGET_PASSWORD}
+    links:
+      - rabbitmq
+    depends_on:
+      - rabbitmq
+      - elasticsearch
+    container_name: expense_worker
     networks:
       - expense_network
     restart:
@@ -19,10 +44,19 @@ services:
     
   
   rabbitmq:
-    image: 'bitnami/rabbitmq:3.7'
+    image: "rabbitmq:3-management"
+    hostname: "rabbitmq"
+    environment:
+      RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
+      RABBITMQ_DEFAULT_USER: "rabbitmq"
+      RABBITMQ_DEFAULT_PASS: "rabbitmq"
+      RABBITMQ_DEFAULT_VHOST: "/"
     ports:
       - '5672:5672'
       - '15672:15672'
+    labels:
+      NAME: "rabbitmq"
+    container_name: rabbitmq
     volumes:
       - 'expense_elk_data:/bitnami'
     networks:
@@ -47,6 +81,7 @@ services:
       ELASTIC_PASSWORD: Dscw1800
       http.cors.enabled: "true"
       http.cors.allow-origin: "*"
+    container_name: elasticsearch
     networks:
       - expense_network
     restart:
@@ -64,6 +99,7 @@ services:
       - "5601:5601"
     networks:
       - expense_network
+    container_name: kibana
     depends_on:
       - elasticsearch
     restart:

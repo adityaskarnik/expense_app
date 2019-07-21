@@ -23,7 +23,8 @@ from check_new_data import check_new_data, download_new_attachment
 from celery import Celery
 from celery.schedules import crontab
 
-app = Celery('check_expense_file')
+app = Celery('check_expense_file',
+             broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
 
 cwd = os.getcwd()
 User = get_user_model()
