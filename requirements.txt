@@ -70,6 +70,7 @@ pbr==3.1.1
 pexpect==4.6.0
 pickleshare==0.7.5
 prompt-toolkit==1.0.15
+psycopg2==2.8.3 
 ptyprocess==0.6.0
 pyasn1==0.4.4
 pycrypto==2.6.1

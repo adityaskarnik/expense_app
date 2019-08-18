@@ -9,3 +9,6 @@ expense_manager/__pycache__/wsgi.cpython-36.pyc
 celerybeat-schedule
 src/
 .env
+*.db
+datadump.json
+dump*.csv

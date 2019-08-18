@@ -7,6 +7,7 @@ services:
     command: bash -c "python manage.py runserver 0.0.0.0:8100"
     volumes:
       - .:/app
+      - /root/db/:/root/db/
     ports:
       - "8100:8100"
     environment:
@@ -40,8 +41,25 @@ services:
     networks:
       - expense_network
     restart:
-      always  
-    
+      always
+
+  expense_db:
+    image: "postgres"
+    container_name: expense_db
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_PASSWORD: "EM@root"
+      POSTGRES_DB: "Expenses"
+      POSTGRES_USER: "expense"
+      POSTGRES_HOST: "expense_host"
+      POSTGRES_PORT: "5432"
+      PG_DATA: "/var/lib/postgresql/data"
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+    networks:
+      - expense_network
   
   rabbitmq:
     image: "rabbitmq:3-management"

@@ -3,7 +3,7 @@ Welcome to Expense App :dollar:
 
   
 
-Do you receive an email from your bank about your last transaction? Each email tracks need to be logged as an expense. Daily keeping track of each expense made is lost in the email lot. Let the App do the hard work and keep you free from it.
+Do you receive an email from your bank about your last transaction? Each email tracks need to be logged as an expense. Daily keeping track of each expense made, is lost in the email lot. Let the App do the hard work and keep you free from it.
 See all expenses, analyse on what you spend most, so that you can reduce them.
 
   
@@ -15,11 +15,12 @@ See all expenses, analyse on what you spend most, so that you can reduce them.
 
 ### Please visit the [wiki page](https://github.com/adityaskarnik/expense_app/wiki) for more details of the stack used in the application
 
+### Exporting from Default SQLite database in Django to PostgreSQL visit [here](https://github.com/adityaskarnik/expense_app/wiki/SQLite-to-PostgreSQL)
   
 
 ## Donation
 
-If this page helps you reduce time to develop, you can give me a cup of coffee :coffee:
+If this page helps you reduce time to develop, you can buy me a cup of coffee :coffee:
 
   
 
