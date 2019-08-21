@@ -1,0 +1,4 @@
+CREATE USER expense;
+CREATE DATABASE Expenses;
+ALTER DATABASE Expenses OWNER TO expense;
+ALTER USER expense WITH PASSWORD 'EM@root';
