@@ -2,7 +2,7 @@ import imaplib
 import re
 from sys import getsizeof
 import socket
-import sqlite3
+import psycopg2
 import os
 from datetime import datetime
 from celery import Celery
@@ -12,7 +12,7 @@ app = Celery('mail_checker',
             broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
 
 cwd = os.getcwd()
-database = cwd+"/db.sqlite3"
+
 definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails', 'ONE97']}, 
                 'Travel': {'Taxi' : ['Uber','Zaak']}, 
                 'Utilities' : {'Telephone' : ['Vodafone'], 
@@ -39,24 +39,8 @@ def is_connected():
         pass
     return False
 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Exception as e:
-        print("Exception", e)
- 
-    return None
-
-def create_project(conn, expense):
-    sql = ''' INSERT INTO expenses(date,amount,category,sub_category,payment_method,description,
-                ref_checkno,payee_payer,status,receipt_picture,account,tag,tax,mileage)
-    VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) '''
+def insert_expense(conn, expense):
+    sql = ''' INSERT INTO Expenses(date,amount,category,sub_category,payment_method,description,ref_checkno,payee_payer,status,receipt_picture,account,tag,tax,mileage) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) '''
     cur = conn.cursor()
     cur.execute(sql, expense)
     return cur.lastrowid
@@ -112,8 +96,12 @@ def mail_checker():
                         resutlDict[num]['payee'] = " ".join(matchPayeeName.group().split())
                         resutlDict[num]['amount'] = matchAmount.group()
                         resutlDict[num]['date'] = date
-                    conn = create_connection(database)
-                    with conn:
+                    connection = psycopg2.connect(user = "expense",
+                                    password = "EM@root",
+                                    host = "expense_db",
+                                    port = "5432",
+                                    database = "Expenses")
+                    with connection:
                         print("connection created")
                         # Date, Amount, Category, Sub Category, Payment Method, Description, 
                         # Ref/Check No, Payee / Payer, Status, Receipt Picture, Account, Tag, Tax, Mileage
@@ -136,7 +124,7 @@ def mail_checker():
                             subCategory = 'Unknown'
                         expense = (date, "-"+str(matchAmount.group()), category, subCategory, 'Debit', '', '', finalPayee,
                         'Cleared', '', 'Personal Expense', '', '', '')
-                        create_project(conn, expense)
+                        insert_expense(connection, expense)
                         print('Task completed')
                 else: 
                     print("Regex search failed")

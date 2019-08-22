@@ -11,7 +11,7 @@ services:
     ports:
       - "8100:8100"
     environment:
-      BUDGET_PASSWORD: ${BUDGET_PASSWORD}
+      BUDGET_PASSWORD: "${BUDGET_PASSWORD}"
     depends_on:
       - expense_worker
       - elasticsearch
@@ -25,13 +25,13 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    # command: bash -c "celery worker -A payee_name -l INFO --beat --concurrency=1 -n 'main_app'"
+    command: bash -c "celery worker -A payee_name -l INFO --beat --concurrency=1 -n 'main_app'"
     volumes:
       - .:/app
     ports:
       - "8200:8200"
     environment:
-      BUDGET_PASSWORD: ${BUDGET_PASSWORD}
+      BUDGET_PASSWORD: "${BUDGET_PASSWORD}"
     links:
       - rabbitmq
     depends_on:
