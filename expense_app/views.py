@@ -32,7 +32,7 @@ User = get_user_model()
 from elasticsearch import Elasticsearch
 index_name = 'expense_mail_checker'
 doc_type = 'mailchecker'
-es = Elasticsearch('elastic:Dscw1800@elasticsearch:9200/')
+es = Elasticsearch('elastic:' + os.environ['ELASTIC_PASSWORD'] + '@elasticsearch:9200/')
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
