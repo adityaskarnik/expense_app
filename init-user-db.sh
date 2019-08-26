@@ -7,7 +7,7 @@ psql -v ON_ERROR_STOP=1 --username "expense" --dbname Expenses <<-EOSQL
 	CREATE USER expense;
 	CREATE DATABASE Expenses;
     ALTER DATABASE Expenses OWNER TO expense;
-    ALTER USER expense WITH PASSWORD 'EM@root';
+    ALTER USER expense WITH PASSWORD "${POSTGRES_PASSWORD}";
     CREATE TABLE IF NOT EXISTS Expenses ("id" integer NOT NULL PRIMARY KEY AUTOINCREMENT, 
         "date" varchar(500) NOT NULL, "amount" varchar(500) NOT NULL, "category" varchar(500) NOT NULL, 
         "sub_category" varchar(500) NOT NULL, "payment_method" varchar(500) NOT NULL, 

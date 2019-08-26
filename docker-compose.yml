@@ -4,7 +4,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c "python manage.py runserver 0.0.0.0:8100"
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8100"
     volumes:
       - .:/app
       - /root/db/:/root/db/
@@ -12,6 +12,8 @@ services:
       - "8100:8100"
     environment:
       BUDGET_PASSWORD: "${BUDGET_PASSWORD}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
     depends_on:
       - expense_worker
       - elasticsearch
@@ -32,6 +34,8 @@ services:
       - "8200:8200"
     environment:
       BUDGET_PASSWORD: "${BUDGET_PASSWORD}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
     links:
       - rabbitmq
     depends_on:
@@ -53,7 +57,7 @@ services:
       POSTGRES_HOST: "expense_host"
       POSTGRES_PORT: "5432"
       POSTGRES_USER: "expense"
-      POSTGRES_PASSWORD: "EM@root"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "Expenses"
       PG_DATA: "/var/lib/postgresql/data"
     volumes:
@@ -98,7 +102,7 @@ services:
       - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx2560m -Xms2560m"
-      ELASTIC_PASSWORD: Dscw1800
+      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
       http.cors.enabled: "true"
       http.cors.allow-origin: "*"
     container_name: elasticsearch

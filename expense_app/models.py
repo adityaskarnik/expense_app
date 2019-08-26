@@ -8,7 +8,7 @@ class User(AbstractUser):
     
 class Expenses(models.Model):
     date = models.CharField(max_length=500)
-    amount = models.CharField(max_length=500)
+    amount = models.IntegerField()
     category = models.CharField(max_length=500)
     sub_category = models.CharField(max_length=500)
     payment_method = models.CharField(max_length=500)

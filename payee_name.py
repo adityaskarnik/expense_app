@@ -40,7 +40,7 @@ def is_connected():
     return False
 
 def insert_expense(conn, expense):
-    sql = ''' INSERT INTO Expenses(date,amount,category,sub_category,payment_method,description,ref_checkno,payee_payer,status,receipt_picture,account,tag,tax,mileage) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) '''
+    sql = ''' INSERT INTO "Expenses"(date,amount,category,sub_category,payment_method,description,ref_checkno,payee_payer,status,receipt_picture,account,tag,tax,mileage) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) '''
     cur = conn.cursor()
     cur.execute(sql, expense)
     return cur.lastrowid
@@ -97,7 +97,7 @@ def mail_checker():
                         resutlDict[num]['amount'] = matchAmount.group()
                         resutlDict[num]['date'] = date
                     connection = psycopg2.connect(user = "expense",
-                                    password = "EM@root",
+                                    password = os.environ["POSTGRES_PASSWORD"],
                                     host = "expense_db",
                                     port = "5432",
                                     database = "Expenses")
@@ -122,7 +122,7 @@ def mail_checker():
                             subCategory = knownSubcategory[0]
                         else:
                             subCategory = 'Unknown'
-                        expense = (date, "-"+str(matchAmount.group()), category, subCategory, 'Debit', '', '', finalPayee,
+                        expense = (date, "-"+str(matchAmount.group().lstrip('-')), category, subCategory, 'Debit', '', '', finalPayee,
                         'Cleared', '', 'Personal Expense', '', '', '')
                         insert_expense(connection, expense)
                         print('Task completed')
