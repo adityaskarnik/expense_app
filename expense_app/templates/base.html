@@ -144,9 +144,8 @@
     </div>
 	<!-- /footer -->
 	<script>
-		var d = new Date();
-		var strDate = d.getFullYear() + "/" + (d.getMonth()+1) + "/" + d.getDate();
-		document.getElementById("demo").innerHTML = strDate;
+		d = moment().format("dddd MMMM Do YYYY");
+		document.getElementById("demo").innerHTML = d;
 	</script>
     </body>
 </html>

@@ -383,7 +383,7 @@ $(function() {
     var end = moment();
 
     function cb(start, end) {
-        $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+        $('#reportrange span').html(start.format('MMMM DD, YYYY') + ' - ' + end.format('MMMM DD, YYYY'));
     }
 
     $('#reportrange').daterangepicker({
@@ -447,7 +447,7 @@ $(function() {
                 var date = new Date()
                 this.setDate(date.getFullYear(), date.getMonth() + 1, date.getDate())
             },
-            format: 'yyyy/mm/d'
+            format: 'yyyy/mm/dd'
         });
     });
 
@@ -464,8 +464,6 @@ $(function() {
     // adding transaction
     $('#post-form').on('submit', function(event){
         event.preventDefault();
-        console.log("submit")
-        console.log("FORM DATA",$('#post-form').serialize())
         add_expense();
 
     });

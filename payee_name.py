@@ -122,7 +122,7 @@ def mail_checker():
                             subCategory = knownSubcategory[0]
                         else:
                             subCategory = 'Unknown'
-                        expense = (date, "-"+str(matchAmount.group().lstrip('-')), category, subCategory, 'Debit', '', '', finalPayee,
+                        expense = (date,float(("-"+str(matchAmount.group())).lstrip('-')), category, subCategory, 'Debit', '', '', finalPayee,
                         'Cleared', '', 'Personal Expense', '', '', '')
                         insert_expense(connection, expense)
                         print('Task completed')

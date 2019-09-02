@@ -43,14 +43,14 @@ def setup_periodic_tasks(sender, **kwargs):
 @login_required
 def home(request):
     if (len(Expenses.objects.all()) > 0):
-        food = int(abs(Expenses.objects.filter(category='Food').aggregate(Sum('amount'))['amount__sum']))
-        travel = int(abs(Expenses.objects.filter(category='Travel').aggregate(Sum('amount'))['amount__sum']))
-        personal = int(abs(Expenses.objects.filter(category='Personal').aggregate(Sum('amount'))['amount__sum']))
-        savings = int(abs(Expenses.objects.filter(category='Savings').aggregate(Sum('amount'))['amount__sum']))
-        entertainment = int(abs(Expenses.objects.filter(category='Entertainment').aggregate(Sum('amount'))['amount__sum']))
-        household = int(abs(Expenses.objects.filter(category='Household').aggregate(Sum('amount'))['amount__sum']))
-        healthcare = int(abs(Expenses.objects.filter(category='Health Care').aggregate(Sum('amount'))['amount__sum']))
-        utilities = int(abs(Expenses.objects.filter(category='Utilities').aggregate(Sum('amount'))['amount__sum']))
+        food = int(abs((Expenses.objects.filter(category='Food').aggregate(Sum('amount'))['amount__sum']) or 0))
+        travel = int(abs((Expenses.objects.filter(category='Travel').aggregate(Sum('amount'))['amount__sum']) or 0))
+        personal = int(abs((Expenses.objects.filter(category='Personal').aggregate(Sum('amount'))['amount__sum']) or 0))
+        savings = int(abs((Expenses.objects.filter(category='Savings').aggregate(Sum('amount'))['amount__sum']) or 0))
+        entertainment = int(abs((Expenses.objects.filter(category='Entertainment').aggregate(Sum('amount'))['amount__sum']) or 0))
+        household = int(abs((Expenses.objects.filter(category='Household').aggregate(Sum('amount'))['amount__sum']) or 0))
+        healthcare = int(abs((Expenses.objects.filter(category='Health Care').aggregate(Sum('amount'))['amount__sum']) or 0))
+        utilities = int(abs((Expenses.objects.filter(category='Utilities').aggregate(Sum('amount'))['amount__sum']) or 0))
         return render(request, 'home.html', {'food':food, 'travel':travel, 'personal':personal,
                                             'savings':savings, 'entertainment':entertainment,
                                             'household':household, 'healthcare':healthcare,
