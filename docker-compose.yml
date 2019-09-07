@@ -19,7 +19,8 @@ services:
       - elasticsearch
     container_name: expense_app
     networks:
-      - expense_network
+      expense_network:
+        ipv4_address: "10.10.10.2"
     restart:
       always
 
@@ -43,7 +44,8 @@ services:
       - elasticsearch
     container_name: expense_worker
     networks:
-      - expense_network
+      expense_network:
+        ipv4_address: "10.10.10.3"
     restart:
       always
 
@@ -65,7 +67,8 @@ services:
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     networks:
-      - expense_network
+      expense_network:
+        ipv4_address: "10.10.10.4"
   
   rabbitmq:
     image: "rabbitmq:3-management"
@@ -84,7 +87,8 @@ services:
     volumes:
       - 'expense_elk_data:/bitnami'
     networks:
-      - expense_network
+      expense_network:
+        ipv4_address: "10.10.10.5"
     restart:
       always
 
@@ -107,7 +111,8 @@ services:
       http.cors.allow-origin: "*"
     container_name: elasticsearch
     networks:
-      - expense_network
+      expense_network:
+        ipv4_address: "10.10.10.6"
     restart:
       always
 
@@ -122,7 +127,8 @@ services:
     ports:
       - "5601:5601"
     networks:
-      - expense_network
+      expense_network:
+        ipv4_address: "10.10.10.7"
     container_name: kibana
     depends_on:
       - elasticsearch
@@ -137,3 +143,7 @@ volumes:
 networks:
   expense_network:
     driver: overlay
+    ipam:
+      config:
+        - subnet: 10.10.10.0/16
+          gateway: 10.10.10.1

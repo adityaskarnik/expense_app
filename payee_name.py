@@ -74,7 +74,8 @@ def mail_checker():
                     matchAmount = re.search(regexAmount, raw_email)
                     matchDate = re.search(regexDate, raw_email)
 
-                    # TODO add condition to skip ATD payee type
+                    if (matchPayeeName is None):
+                        continue
 
                 if (matchAmount is not None and matchDate is not None):
                     try:
