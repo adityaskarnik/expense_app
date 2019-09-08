@@ -130,22 +130,22 @@ def mail_checker():
                             subCategory = 'Unknown'
                         expense = (date,float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-')), category, subCategory, 'Debit', '', '', finalPayee,
                         'Cleared', '', 'Personal Expense', '', '', '')
-                        expense = {}
-                        expense['date'] = date
-                        expense['amount'] = float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-'))
-                        expense['category'] = category
-                        expense['sub_category'] = subCategory
-                        expense['payment_method'] = 'Debit'
-                        expense['description'] = ''
-                        expense['ref_checkno'] = ''
-                        expense['payee_payer'] = finalPayee
-                        expense['status'] = 'Cleared'
-                        expense['receipt_picture'] = ''
-                        expense['account'] = 'Personal Expense'
-                        expense['tag'] = ''
-                        expense['tax'] = ''
-                        expense['mileage'] = ''
-                        es.index(index=index_name, doc_type=doc_type, body=expense)
+                        expense_es = {}
+                        expense_es['date'] = date
+                        expense_es['amount'] = float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-'))
+                        expense_es['category'] = category
+                        expense_es['sub_category'] = subCategory
+                        expense_es['payment_method'] = 'Debit'
+                        expense_es['description'] = ''
+                        expense_es['ref_checkno'] = ''
+                        expense_es['payee_payer'] = finalPayee
+                        expense_es['status'] = 'Cleared'
+                        expense_es['receipt_picture'] = ''
+                        expense_es['account'] = 'Personal Expense'
+                        expense_es['tag'] = ''
+                        expense_es['tax'] = ''
+                        expense_es['mileage'] = ''
+                        es.index(index=index_name, doc_type=doc_type, body=expense_es)
                         insert_expense(connection, expense)
                         print('Task completed')
                 else: 
