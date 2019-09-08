@@ -11,6 +11,11 @@ from celery.schedules import crontab
 app = Celery('mail_checker',
             broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
 
+from elasticsearch import Elasticsearch
+index_name = 'expense_mail_checker'
+doc_type = 'mailchecker'
+es = Elasticsearch('elastic:' + os.environ['ELASTIC_PASSWORD'] + '@elasticsearch:9200/')
+
 cwd = os.getcwd()
 
 definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails', 'ONE97']}, 
@@ -125,6 +130,22 @@ def mail_checker():
                             subCategory = 'Unknown'
                         expense = (date,float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-')), category, subCategory, 'Debit', '', '', finalPayee,
                         'Cleared', '', 'Personal Expense', '', '', '')
+                        expense = {}
+                        expense['date'] = date
+                        expense['amount'] = float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-'))
+                        expense['category'] = category
+                        expense['sub_category'] = subCategory
+                        expense['payment_method'] = 'Debit'
+                        expense['description'] = ''
+                        expense['ref_checkno'] = ''
+                        expense['payee_payer'] = finalPayee
+                        expense['status'] = 'Cleared'
+                        expense['receipt_picture'] = ''
+                        expense['account'] = 'Personal Expense'
+                        expense['tag'] = ''
+                        expense['tax'] = ''
+                        expense['mileage'] = ''
+                        es.index(index=index_name, doc_type=doc_type, body=expense)
                         insert_expense(connection, expense)
                         print('Task completed')
                 else: 
