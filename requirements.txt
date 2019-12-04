@@ -21,7 +21,7 @@ coverage==3.6
 cryptography==2.1.4
 cssselect==0.9.1
 decorator==4.3.0
-Django==2.2.3
+Django==2.2.8
 django-braces==1.2.2
 django-celery==3.1.16
 django-debug-toolbar==0.9.4
