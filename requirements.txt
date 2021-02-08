@@ -51,7 +51,7 @@ ipaddress==1.0.17
 ipython==5.8.0
 ipython-genutils==0.2.0
 isort==4.3.4
-Jinja2==2.7.3
+Jinja2==2.10.1
 jmespath==0.9.3
 jsonschema==2.6.0
 keyring==10.6.0
