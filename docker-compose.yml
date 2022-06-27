@@ -10,6 +10,8 @@ services:
       - /root/db/:/root/db/
     ports:
       - "8100:8100"
+    env_file:
+      - .env
     environment:
       BUDGET_PASSWORD: "${BUDGET_PASSWORD}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -17,6 +19,7 @@ services:
     depends_on:
       - expense_worker
       - elasticsearch
+      - expense_db
     container_name: expense_app
     networks:
       expense_network:
@@ -33,6 +36,8 @@ services:
       - .:/app
     ports:
       - "8200:8200"
+    env_file:
+      - .env
     environment:
       BUDGET_PASSWORD: "${BUDGET_PASSWORD}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
@@ -42,6 +47,7 @@ services:
     depends_on:
       - rabbitmq
       - elasticsearch
+      - expense_db
     container_name: expense_worker
     networks:
       expense_network:
@@ -55,6 +61,8 @@ services:
     restart: always
     ports:
       - 5432:5432
+    env_file:
+      - .env
     environment:
       POSTGRES_HOST: "expense_host"
       POSTGRES_PORT: "5432"
@@ -73,6 +81,8 @@ services:
   rabbitmq:
     image: "rabbitmq:3-management"
     hostname: "rabbitmq"
+    env_file:
+      - .env
     environment:
       RABBITMQ_ERLANG_COOKIE: "SWQOKODSQALRPCLNMEQG"
       RABBITMQ_DEFAULT_USER: "rabbitmq"
@@ -104,6 +114,8 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    env_file:
+      - .env
     environment:
       ES_JAVA_OPTS: "-Xmx2560m -Xms2560m"
       ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"

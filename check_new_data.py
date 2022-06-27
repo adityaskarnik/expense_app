@@ -72,7 +72,6 @@ def download_new_attachment():
             raw_email = raw_email.decode('utf-8')
             email_message = email.message_from_string(raw_email)
             for part in email_message.walk():
-                # this part comes from the snipped I don't understand yet... 
                 if part.get_content_maintype() == 'multipart':
                     continue
                 if part.get('Content-Disposition') is None:
