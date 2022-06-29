@@ -31,7 +31,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c "celery worker -A payee_name -l INFO --beat --concurrency=1 -n 'main_app'"
+    command: bash -c "celery -A payee_name worker -l INFO --beat --concurrency=1 -n 'main_app'"
     volumes:
       - .:/app
     ports:
