@@ -7,14 +7,26 @@ import os
 from datetime import datetime
 from celery import Celery
 from celery.schedules import crontab
+from dotenv import load_dotenv
+import logging
+from elasticsearch import Elasticsearch
 
-app = Celery('mail_checker',
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging = logging.getLogger(__name__)
+
+load_dotenv()
+
+app = Celery('payee_name',
             broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
 
-from elasticsearch import Elasticsearch
 index_name = 'expense_mail_checker'
 doc_type = 'mailchecker'
-es = Elasticsearch('elastic:' + os.environ['ELASTIC_PASSWORD'] + '@elasticsearch:9200/')
+es = Elasticsearch(
+    ['http://10.10.0.6:9200'],
+    http_auth=('elastic', os.getenv('ELASTIC_PASSWORD', '')),
+    headers={"Content-Type": "application/json"}
+)
+
 
 cwd = os.getcwd()
 
@@ -38,121 +50,223 @@ def is_connected():
         # connect to the host -- tells us if the host is actually
         # reachable
         socket.create_connection(("www.google.com", 80))
-        print('Internet check')
+        logging.info('Internet check')
         return True
     except OSError:
         pass
     return False
 
 def insert_expense(conn, expense):
-    sql = ''' INSERT INTO "Expenses"(date,amount,category,sub_category,payment_method,description,ref_checkno,payee_payer,status,receipt_picture,account,tag,tax,mileage) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) '''
+    sql = ''' INSERT INTO "Expenses"(date, amount, category, sub_category, payment_method, description, ref_checkno, payee_payer, status, receipt_picture, account, tag, tax, mileage)
+              VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s) '''
     cur = conn.cursor()
     cur.execute(sql, expense)
+    conn.commit()
     return cur.lastrowid
+
+def parse_email(raw_email):
+    def try_parse_email(email_content):
+        regex_patterns_payee = [
+            r"((?<=PCA:[0-9]{10}:).*(?=Available))|((?<=(to|To)):?[0-9a-zA-Z.\s@\/]+((?=UTRNO)|(?=Available)))|((?<=at).*(?=txn))",
+            r'<td>Terminal Owner Name<\/td>\s*<td id="bank">([^<]+)<\/td>',
+            r"ATD:[0-9]{10}:[A-Z0-9]+:(.*?)(?=\. Available Balance on)",
+            r"PCA:[0-9]{10}:[0-9]+:(.*?)(?=\s{2,})",
+            r"(?<=PCA:[0-9]{10}:).*(?=Available)",
+            r"(?<=to|To):?[0-9a-zA-Z.\s@\/]+(?=(UTRNO|Available))",
+            r"NET TXN: (?:PAYU|AVENUES)\s[0-9]+",
+            r"IMPS/NA/XXX[0-9]{4}/RRN:[0-9]+/[0-9]+/State Bank Of IndiaRD Mobile",
+            r"[A-Z]{3}\sATM\s+[A-Z]+\s*\d{4}",
+            r"(?=([0-9]+\sat\s))?([A-Z]{3}\sATM(\s{2})?(=?)([A-Z]+)?([0-9]+)?(=?)([A-Z]+)?([0-9]+)?\s?)([A-Z]+)?([0-9]+)?(?=\.)",
+            r"on account of\s(.*)\n?\r?\.?(?=\sAvailable Balance)",
+            r"w\/d\sat\s(.*)fm\sA\/cx",
+            r'<td id="tranType">([A-Z]+\s?[A-Z]+)<\/td>'
+        ]
+        regex_patterns_amount = [
+            r"(?<=INR\s)[\d,]+(?:\.\d{1,2})?(?=\sDebited)",
+            r"(?<=INR\s)[\d,]+(?:\.\d{1,2})?(?=\shas)",
+            r"Rs\s?([\d,]+(?:\.\d{1,2})?)(?=\son)",
+            r'<td id="transactionNumber">(\d+)</td>.*?<td id="amount">([\d.]+)</td>',
+            r"(?<=Amount:)\s*[\d,]+(?:\.\d{1,2})?",
+            r"(?<=INR\s)[\d,]+(?:\.\d{1,2})?(?=\sDebited)|(?<=INR\s)[\d,]+(?:\.\d{1,2})?(?=\shas)|(?<=Rs\s)[\d,]+(?:\.\d{1,2})?(?=\son)",
+            r"(?<=\s)[\d,]+(?=\swithdrawn)",
+            r'<td>Amount \(INR\)<\/td>\s*<td id="amount">([\d,]+\.\d{1,2})<\/td>',
+            r"Rs\s([\d,]+)\sw\/d"
+        ]
+        regex_patterns_date = [
+            r'<td>Date &amp; Time</td>\s*<td id="dateTime">([A-Za-z]{3} \d{1,2}, \d{4}, \d{2}:\d{2})</td>',
+            r"((?<=;).*\n?.*(?=\+0530))|((?<=Date:).*\n?.*(?<=(AM)|(PM)))|([0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+)"
+        ]
+
+        matchPayeeName = None
+        matchAmount = None
+        matchDate = None
+
+        try:
+            for pattern in regex_patterns_payee:
+                match = re.search(pattern, email_content)
+                if match:
+                    logging.info(f"Payee pattern matched: {match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()}")
+                    matchPayeeName = match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()
+                    if 'CASH WITHDRAWAL' in matchPayeeName:
+                        return "CASH WITHDRAWAL", None, None
+                    break
+
+            for pattern in regex_patterns_amount:
+                match = re.search(pattern, email_content)
+                if match:
+                    logging.info(f"Amount pattern matched: {match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()}")
+                    matchAmount = match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()
+                    break
+
+            for pattern in regex_patterns_date:
+                match = re.search(pattern, email_content)
+                if match:
+                    logging.info(f"Date pattern matched: {match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()}")
+                    matchDate = match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()
+                    break
+
+            return matchPayeeName, matchAmount, matchDate
+        except Exception as e:
+            logging.error(f"Error parsing email: {e}")
+            raise e
+
+    try:
+        logging.debug(f"DEBUG: trying for the first time")
+        matchPayeeName, matchAmount, matchDate = try_parse_email(raw_email)
+    except:
+        logging.info("Trying with UTF-8 decoding")
+        raw_email_utf8 = raw_email.decode('utf-8')
+        matchPayeeName, matchAmount, matchDate = try_parse_email(raw_email_utf8)
+
+    return matchPayeeName, matchAmount, matchDate
+
+
+def format_date(matchDate):
+    try:
+        logging.info(f"Trying first way: {matchDate}")
+        matchDate = matchDate.strip()
+        date = datetime.strptime(matchDate.split()[0], '%d-%b-%Y').strftime('%Y/%m/%d')
+        logging.info(f"format_date: {date}")
+    except Exception as e:
+        logging.error(f"Date format exception, trying another way: {e}")
+        try:
+            date = datetime.strptime(matchDate.split()[0], '%d-%b-%y').strftime('%Y/%m/%d')
+        except Exception as e:
+            logging.error(f"Date format exception, trying next way: {e}")
+            try:
+                dd = ' '.join(matchDate.split()).replace(',', '')
+                date = datetime.strptime(dd, '%a %d %b %Y %H:%M:%S').strftime('%Y/%m/%d')
+            except Exception as e:
+                try:
+                    logging.info(f"Date format exception, trying second last way: {e}")
+                    date_format = '%b %d, %Y, %H:%M'
+                    parsed_date = datetime.strptime(matchDate, date_format)
+                    date = parsed_date.strftime('%Y/%m/%d')
+                except Exception as e:
+                    logging.info(f"Date format exception, trying last way: {e}")
+                    date_format = '%a, %b %d, %Y at %I:%M %p'
+                    parsed_date = datetime.strptime(matchDate, date_format)
+                    date = parsed_date.strftime('%Y/%m/%d')
+    return date
 
 @app.task
 def mail_checker():
-    if (is_connected()):
-        print('Process started')
-        # global regex pattern for the getting payee name from mail
-        regexPayeeName = r"((?<=PCA:[0-9]{10}:).*(?=Available))|((?<=(to|To)):?[0-9a-zA-Z.\s@\/]+((?=UTRNO)|(?=Available)))|((?<=at).*(?=txn))"
-        regexAmount = r"((?<=INR\s).*(?=\sDebited))|(?<=INR\s).*(?=\shas)|((?<=Rs).*(?=\son))"
-        regexDate = r"((?<=;).*\n?.*(?=\+0530))|((?<=Date:).*\n?.*(?<=(AM)|(PM)))|([0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+)"
+    if not is_connected():
+        logging.error("No Internet connection")
+        return
+
+    logging.info('Process started')
+
+    try:
         mail = imaplib.IMAP4_SSL('imap.gmail.com')
-
-        login = mail.login('budget.expenseapp@gmail.com', os.environ["BUDGET_PASSWORD"])
-
+        logging.info('Connected to Gmail')
+        mail.login('budget.expenseapp@gmail.com', os.getenv("BUDGET_PASSWORD", ""))
+        logging.info('Logged in')
         mail.select("inbox")
-        resutlDict = {}
+        logging.info('Inbox selected')
+
         result, data = mail.search(None, '(UNSEEN)', '((OR HEADER Subject "Transaction alert for your State Bank of India Debit Card" HEADER Subject "Debit Alert"))')
-        try:
-            for num in data[0].split():
+        logging.info(f"Mail search completed, found {len(data[0].split())}")
+
+        for num in data[0].split():
+            try:
                 typ, data = mail.fetch(num, '(RFC822)')
+                logging.info(f"Fetched mail {num}")
                 raw_email = data[0][1]
-                resutlDict[num] = {}
-                try:
-                    matchPayeeName = re.search(regexPayeeName, raw_email)
-                    matchAmount = re.search(regexAmount, raw_email)
-                except:
-                    raw_email = raw_email.decode('utf-8')
-                    matchPayeeName = re.search(regexPayeeName, raw_email)
-                    matchAmount = re.search(regexAmount, raw_email)
-                    matchDate = re.search(regexDate, raw_email)
 
-                    if (matchPayeeName is None):
-                        continue
+                matchPayeeName, matchAmount, matchDate = parse_email(raw_email)
+                logging.info(f"Matched payee: {matchPayeeName}, amount: {matchAmount}, date: {matchDate}")
 
-                if (matchAmount is not None and matchDate is not None):
-                    try:
-                        date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%Y').strftime('%Y/%m/%d')
-                        resutlDict[num]['payee'] = " ".join(matchPayeeName.group().split())
-                        resutlDict[num]['amount'] = matchAmount.group()
-                        resutlDict[num]['date'] = date
+                if matchPayeeName == "CASH WITHDRAWAL":
+                    logging.info("Cash withdrawal email, skipping")
+                    continue
+                elif 'ATMs for better security, convenience & faster complaint resolution' in matchPayeeName:
+                    logging.info("ATM Alert email, skipping")
+                    continue
+                elif not (matchAmount and matchDate and matchPayeeName):
+                    logging.error("Regex search failed normally and after UTF-8 decoding")
+                    mail.store(num, '-FLAGS', '\\Seen')
+                    continue
 
-                    except Exception as e:
-                        print ("Finalresult Exception", e)
-                        try:
-                            date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%Y').strftime('%Y/%m/%d')
-                        except:
-                            try:
-                                date = datetime.strptime(matchDate.group().split()[0],'%d-%b-%y').strftime('%Y/%m/%d')
-                            except:
-                                dd = ' '.join(matchDate.group().split()).replace(',','')
-                                date = datetime.strptime(dd,'%a %d %b %Y %H:%M:%S').strftime('%Y/%m/%d')
-                        resutlDict[num]['payee'] = " ".join(matchPayeeName.group().split())
-                        resutlDict[num]['amount'] = matchAmount.group()
-                        resutlDict[num]['date'] = date
-                    connection = psycopg2.connect(user = "expense",
-                                    password = os.environ["POSTGRES_PASSWORD"],
-                                    host = "expense_db",
-                                    port = "5432",
-                                    database = "Expenses")
-                    with connection:
-                        print("connection created")
-                        # Date, Amount, Category, Sub Category, Payment Method, Description, 
-                        # Ref/Check No, Payee / Payer, Status, Receipt Picture, Account, Tag, Tax, Mileage
-                        # create a new project
-                        finalPayee = " ".join(matchPayeeName.group().split())
-                        # knownPayee = [value for key, value in definedPayees.items() if value in finalPayee]
-                        # knownCategory = [key for key, value in definedPayees.items() if value in finalPayee]
-                        knownPayee = [payee for category,subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                        knownCategory = [category for category,subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                        knownSubcategory = [subc for category,subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                        if len(knownPayee) > 0:
-                            finalPayee = knownPayee[0]
-                        if len(knownCategory) > 0:
-                            category = knownCategory[0]
-                        else:
-                            category = 'Unknown'
-                        if len(knownSubcategory) > 0:
-                            subCategory = knownSubcategory[0]
-                        else:
-                            subCategory = 'Unknown'
-                        expense = (date,float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-')), category, subCategory, 'Debit', '', '', finalPayee,
-                        'Cleared', '', 'Personal Expense', '', '', '')
-                        expense_es = {}
-                        expense_es['date'] = date
-                        expense_es['amount'] = float(("-"+str(matchAmount.group().replace(',',''))).lstrip('-'))
-                        expense_es['category'] = category
-                        expense_es['sub_category'] = subCategory
-                        expense_es['payment_method'] = 'Debit'
-                        expense_es['description'] = ''
-                        expense_es['ref_checkno'] = ''
-                        expense_es['payee_payer'] = finalPayee
-                        expense_es['status'] = 'Cleared'
-                        expense_es['receipt_picture'] = ''
-                        expense_es['account'] = 'Personal Expense'
-                        expense_es['tag'] = ''
-                        expense_es['tax'] = ''
-                        expense_es['mileage'] = ''
-                        es.index(index=index_name, doc_type=doc_type, body=expense_es)
-                        insert_expense(connection, expense)
-                        print('Task completed')
-                else: 
-                    print("Regex search failed")
+                date = format_date(matchDate)
+                amount_value = float(("-" + str(matchAmount.replace(',', ''))).lstrip('-'))
+                finalPayee = " ".join(matchPayeeName.split())
 
-        except Exception as e:
-            print("Exception", e)
+                knownPayee = [finalPayee if payee.lower() == 'rent' and 'rent' in finalPayee.lower() else payee for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
+                knownCategory = [category for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
+                knownSubcategory = [subc for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
 
-    else:
-        print("No Internet connection")
+                category = knownCategory[0] if knownCategory else 'Unknown'
+                subCategory = knownSubcategory[0] if knownSubcategory else 'Unknown'
+                finalPayee = knownPayee[0] if knownPayee else finalPayee
+
+                logging.info(f"Payee: {finalPayee}, Amount: {amount_value}, Date: {date}")
+                expense = (date, amount_value, category, subCategory, 'Debit', '', '', finalPayee, 'Cleared', '', 'Personal Expense', '', '', '')
+
+                expense_es = {
+                    'date': date,
+                    'amount': amount_value,
+                    'category': category,
+                    'sub_category': subCategory,
+                    'payment_method': 'Debit',
+                    'description': '',
+                    'ref_checkno': '',
+                    'payee_payer': finalPayee,
+                    'status': 'Cleared',
+                    'receipt_picture': '',
+                    'account': 'Personal Expense',
+                    'tag': '',
+                    'tax': '',
+                    'mileage': ''
+                }
+
+                conn = psycopg2.connect(
+                    user = "expense",
+                    password=os.getenv("POSTGRES_PASSWORD", ""),
+                    host = "expense_db",
+                    port = "5432",
+                    database = "Expenses"
+                )
+
+                insert_expense(conn, expense)
+                conn.close()
+                logging.info(f"Inserted expense: {expense}")
+                logging.info(f"Expense for Elasticsearch: {expense_es}")
+
+                # Assuming you have an Elasticsearch client instance `es` and an index name `index_name`
+                # try:
+                #     es.index(index=index_name, body=expense_es)
+                # except Exception as e:
+                #     logging.error(f"Error inserting expense in Elasticsearch: {e}")
+
+
+            except Exception as e:
+                logging.error(f"Error processing email {num}: {e}")
+                mail.store(num, '-FLAGS', '\\Seen')
+            except CashWithdrawalException as e:
+                pass
+
+    except imaplib.IMAP4.error as e:
+        logging.error(f"IMAP error: {e}")
+    except Exception as e:
+        logging.error(f"Exception in mail_checker: {e}")

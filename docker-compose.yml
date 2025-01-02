@@ -1,4 +1,5 @@
-version: '2.3'
+version: '3.8'
+
 services:
   expense_app:
     build:
@@ -23,7 +24,7 @@ services:
     container_name: expense_app
     networks:
       expense_network:
-        ipv4_address: "10.10.10.2"
+        ipv4_address: "10.10.0.2"
     restart:
       always
 
@@ -31,7 +32,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: bash -c "celery -A payee_name worker -l INFO --beat --concurrency=1 -n 'main_app'"
+    command: bash -c "celery -A payee_name worker --loglevel INFO --concurrency=1 -n 'main_app' & celery -A payee_name beat --loglevel INFO"
     volumes:
       - .:/app
     ports:
@@ -51,12 +52,12 @@ services:
     container_name: expense_worker
     networks:
       expense_network:
-        ipv4_address: "10.10.10.3"
+        ipv4_address: "10.10.0.3"
     restart:
       always
 
   expense_db:
-    image: "postgres"
+    image: "postgres:14"
     container_name: expense_db
     restart: always
     ports:
@@ -70,16 +71,17 @@ services:
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
       POSTGRES_DB: "Expenses"
       PG_DATA: "/var/lib/postgresql/data"
+      TZ: "UTC"
     volumes:
       - /var/lib/postgresql/data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./init-user-db.sh:/docker-entrypoint-initdb.d/init-user-db.sh
     networks:
       expense_network:
-        ipv4_address: "10.10.10.4"
+        ipv4_address: "10.10.0.4"
   
   rabbitmq:
-    image: "rabbitmq:3-management"
+    image: "rabbitmq"
     hostname: "rabbitmq"
     env_file:
       - .env
@@ -98,64 +100,66 @@ services:
       - 'expense_elk_data:/bitnami'
     networks:
       expense_network:
-        ipv4_address: "10.10.10.5"
+        ipv4_address: "10.10.0.5"
     restart:
       always
 
   elasticsearch:
-    build:
-      context: ../expense_elk/elasticsearch/
-      args:
-        ELK_VERSION: 7.0.1
-    volumes:
-      - ../expense_elk/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
-      - /etc/timezone:/etc/timezone
-      - ../expense_elk/elasticsearch/data:/usr/share/elasticsearch/data
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.16.0
+    environment:
+      - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
+      - ELASTIC_PASSWORD="${ELASTIC_PASSWORD}"
+      - http.cors.enabled=true
+      - http.cors.allow-origin="*"
+      - xpack.security.enabled=false
+      - xpack.security.http.ssl.enabled=false
     ports:
       - "9200:9200"
       - "9300:9300"
+    volumes:
+      - ../expense_elk/elasticsearch/config:/usr/share/elasticsearch/config
+      - /etc/timezone:/etc/timezone
+      - ../expense_elk/elasticsearch/data:/usr/share/elasticsearch/data
     env_file:
       - .env
-    environment:
-      ES_JAVA_OPTS: "-Xmx2560m -Xms2560m"
-      ELASTIC_PASSWORD: "${ELASTIC_PASSWORD}"
-      http.cors.enabled: "true"
-      http.cors.allow-origin: "*"
     container_name: elasticsearch
     networks:
       expense_network:
-        ipv4_address: "10.10.10.6"
+        ipv4_address: "10.10.0.6"
     restart:
       always
+    user: "1000:1000"
 
   kibana:
-    build:
-      context: ../expense_elk/kibana/
-      args:
-        ELK_VERSION: 7.0.1
+    image: docker.elastic.co/kibana/kibana:8.16.0
+    environment:
+      ELASTICSEARCH_URL: "http://10.10.0.6:9200"
+      ELASTICSEARCH_HOSTS: "http://10.10.0.6:9200"
     volumes:
-      - ../expense_elk/kibana/config/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+      - ../expense_elk/kibana/config:/usr/share/kibana/config
       - /etc/timezone:/etc/timezone
     ports:
       - "5601:5601"
     networks:
       expense_network:
-        ipv4_address: "10.10.10.7"
+        ipv4_address: "10.10.0.7"
     container_name: kibana
     depends_on:
       - elasticsearch
     restart:
       always
 
-  
+
 volumes:
   expense_elk_data:
     external: true
   
 networks:
   expense_network:
-    driver: overlay
+    name: expense_network
+    driver: bridge
     ipam:
       config:
-        - subnet: 10.10.10.0/16
-          gateway: 10.10.10.1
+        - subnet: 10.10.0.0/16
+          gateway: 10.10.0.1

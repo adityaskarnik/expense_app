@@ -14,3 +14,4 @@ datadump.json
 dump*.csv
 db.sqlite3
 expense_data.json
+.ipynb_checkpoints/

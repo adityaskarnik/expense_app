@@ -22,21 +22,30 @@ from django.http import JsonResponse
 from check_new_data import check_new_data, download_new_attachment
 from celery import Celery
 from celery.schedules import crontab
+from dotenv import load_dotenv
+import logging
+from elasticsearch import Elasticsearch
 
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+load_dotenv()
 app = Celery('check_expense_file',
              broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
 
 cwd = os.getcwd()
 User = get_user_model()
 
-from elasticsearch import Elasticsearch
 index_name = 'expense_mail_checker'
 doc_type = 'mailchecker'
-es = Elasticsearch('elastic:' + os.environ['ELASTIC_PASSWORD'] + '@elasticsearch:9200/')
+es = Elasticsearch(
+    ['http://10.10.0.6:9200'],
+    http_auth=('elastic', os.getenv('ELASTIC_PASSWORD', '')),
+    headers={"Content-Type": "application/json"}
+)
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
+    sender.add_periodic_task(crontab(hour='*/1'),update_data.s())
     # sender.add_periodic_task(crontab(minute='*'),mail_checker.s())
 
 # Create your views here.
@@ -114,10 +123,10 @@ def update_data(request):
                     expense['tag'] = data[i]['Tag']
                     expense['tax'] = data[i]['Tax']
                     expense['mileage'] = data[i]['Mileage']
-                    es.index(index=index_name, doc_type=doc_type, body=expense)
+                    es.index(index=index_name, body=expense)
                 return JsonResponse({'data': data, 'length': len(data), 'new': 'true'})
     else:
-        print("No change in the input data")
+        logging.info("No change in the input data")
         data = []
         file = cwd+'/expense_data.json'
         with open(file) as d:
@@ -188,7 +197,7 @@ def add_expense(request):
     expense['tag'] = request.POST.get('tag')
     expense['tax'] = request.POST.get('tax')
     expense['mileage'] = ''
-    es.index(index=index_name, doc_type=doc_type, body=expense)
+    es.index(index=index_name, body=expense)
     
     return JsonResponse({'data':"Data"})
 
