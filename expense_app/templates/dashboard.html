@@ -280,48 +280,49 @@
                 ]
             },
             "paging": true,
-            // "serverSide": true,
-            // "processing": true,
+            "serverSide": true,
+            "processing": true,
             "ajax": {
                 // "processing": true,
+                "type": "GET",
                 "url": "{% url 'ajax_loaddata' %}",
-                "dataSrc": ""
+                "dataSrc": "data"
             },
             "columns": [
 
                     {
                         mRender: function (data, type, row) {
-                            console.log("ROW DATA",row.fields);
-                            console.log("ROW DATE",row.fields.date);
-                            $(".modal-body #datesingle").val(row.fields.date);
-                            $(".modal-body #amount").val(row.fields.amount);
-                            $(".modal-body #payee").val(row.fields.payee_payer);
-                            $(".modal-body #category").val(row.fields.category);
-                            $(".modal-body #sub-category").val(row.fields.sub_category);
-                            $(".modal-body #method").val(row.fields.payment_method);
-                            $(".modal-body #check-no").val(row.fields.ref_checkno);
-                            $(".modal-body #tag").val(row.fields.tag);
-                            $(".modal-body #tax").val(row.fields.tax);
-                            $(".modal-body #status").val(row.fields.status);
-                            $(".modal-body #description").val(row.fields.description);
+                            console.log("ROW DATA",row);
+                            console.log("ROW DATE",row.date);
+                            $(".modal-body #datesingle").val(row.date);
+                            $(".modal-body #amount").val(row.amount);
+                            $(".modal-body #payee").val(row.payee_payer);
+                            $(".modal-body #category").val(row.category);
+                            $(".modal-body #sub-category").val(row.sub_category);
+                            $(".modal-body #method").val(row.payment_method);
+                            $(".modal-body #check-no").val(row.ref_checkno);
+                            $(".modal-body #tag").val(row.tag);
+                            $(".modal-body #tax").val(row.tax);
+                            $(".modal-body #status").val(row.status);
+                            $(".modal-body #description").val(row.description);
                             var item = '<a data-popup="tooltip" title="Edit Expense" data-toggle="modal" data-target="#modal-edit-expense" class="btn icon-pencil">'
                             return item
                         }
                     },
-                    { "data": "fields.date", "title": "Date"},
-                    { "data": "fields.amount" , "title": "Amount"},
-                    { "data": "fields.payee_payer" , "title": "Payee/Payer"},
-                    { "data": "fields.category" , "title": "Category"},
-                    { "data": "fields.sub_category" , "title": "Sub Category"},
-                    { "data": "fields.payment_method" , "title": "Payment Method"},
-                    { "data": "fields.description" , "title": "Description"},
-                    { "data": "fields.ref_checkno" , "title": "Ref/Check No"},
-                    { "data": "fields.status" , "title": "Status"},
-                    { "data": "fields.receipt_picture" , "title": "Receipt Picture"},
-                    { "data": "fields.account" , "title": "Account"},
-                    { "data": "fields.tag" , "title": "Tag"},
-                    { "data": "fields.tax" , "title": "Tax"},
-                    { "data": "fields.mileage" , "title": "Mileage"}
+                    { "data": "date", "title": "Date"},
+                    { "data": "amount" , "title": "Amount"},
+                    { "data": "payee_payer" , "title": "Payee/Payer"},
+                    { "data": "category" , "title": "Category"},
+                    { "data": "sub_category" , "title": "Sub Category"},
+                    { "data": "payment_method" , "title": "Payment Method"},
+                    { "data": "description" , "title": "Description"},
+                    { "data": "ref_checkno" , "title": "Ref/Check No"},
+                    { "data": "status" , "title": "Status"},
+                    { "data": "receipt_picture" , "title": "Receipt Picture"},
+                    { "data": "account" , "title": "Account"},
+                    { "data": "tag" , "title": "Tag"},
+                    { "data": "tax" , "title": "Tax"},
+                    { "data": "mileage" , "title": "Mileage"}
                 ],
         } );
         // var audio = new Audio('/home/adityakarnik/Music/quite-impressed.mp3');

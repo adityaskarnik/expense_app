@@ -251,13 +251,18 @@ def mail_checker():
                 insert_expense(conn, expense)
                 conn.close()
                 logging.info(f"Inserted expense: {expense}")
-                logging.info(f"Expense for Elasticsearch: {expense_es}")
 
                 # Assuming you have an Elasticsearch client instance `es` and an index name `index_name`
-                # try:
-                #     es.index(index=index_name, body=expense_es)
-                # except Exception as e:
-                #     logging.error(f"Error inserting expense in Elasticsearch: {e}")
+                try:
+                    if not es.indices.exists(index=index_name):
+                        es.indices.create(index=index_name)
+                        logging.info(f"Index {index_name} created")
+                    response = es.index(index=index_name, body=expense_es)
+                    print(f"Document indexed in index {index_name} successfully")
+                    print(response)
+                    logging.info(f"Expense for Elasticsearch: {expense_es}")
+                except Exception as e:
+                    logging.error(f"Error inserting expense in Elasticsearch: {e}")
 
 
             except Exception as e:

@@ -17,7 +17,7 @@ from django.contrib.auth.decorators import login_required
 import os
 from .models import Expenses
 from django.core import serializers
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.http import JsonResponse
 from check_new_data import check_new_data, download_new_attachment
 from celery import Celery
@@ -25,6 +25,8 @@ from celery.schedules import crontab
 from dotenv import load_dotenv
 import logging
 from elasticsearch import Elasticsearch
+from django.core.paginator import Paginator
+from django.db import models
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -134,11 +136,36 @@ def update_data(request):
             return JsonResponse({'data': data, 'new': 'false'})
 
 def ajax_loaddata(request):
-    # with open(cwd+'/expense_data.json') as d:
-        # data = json.loads(d.read())
-    data = Expenses.objects.all()
-    json_data = serializers.serialize('json', data)
-    return HttpResponse(json_data, content_type='application/json')
+    draw = int(request.GET.get('draw', 1))
+    start = int(request.GET.get('start', 0))
+    length = int(request.GET.get('length', 10))
+    search_value = request.GET.get('search[value]', '')
+
+    # Filter your data based on the search value
+    queryset = Expenses.objects.all()
+    if search_value:
+        search_query = Q()
+        for field in Expenses._meta.fields:
+            if isinstance(field, (models.CharField, models.TextField)):
+                search_query |= Q(**{f"{field.name}__icontains": search_value})
+        queryset = queryset.filter(search_query)
+
+
+    queryset = queryset.order_by('-date')
+    # Paginate your data
+    paginator = Paginator(queryset, length)
+    page_number = (start // length) + 1
+    page = paginator.get_page(page_number)
+
+    data = list(page.object_list.values())
+
+    response = {
+        "draw": draw,
+        "recordsTotal": paginator.count,
+        "recordsFiltered": paginator.count,
+        "data": data,
+    }
+    return JsonResponse(response)
 
 
 def insert_data(request):
