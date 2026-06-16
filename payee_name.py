@@ -5,16 +5,20 @@ import socket
 import psycopg2
 import os
 from datetime import datetime
+import django
 from celery import Celery
 from celery.schedules import crontab
 from dotenv import load_dotenv
 import logging
 from elasticsearch import Elasticsearch
+from expense_app.categorization import classify_transaction, learn_merchant_mapping
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging = logging.getLogger(__name__)
 
 load_dotenv()
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'expense_manager.settings')
+django.setup()
 
 app = Celery('payee_name',
             broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
@@ -29,17 +33,6 @@ es = Elasticsearch(
 
 
 cwd = os.getcwd()
-
-definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails', 'ONE97']}, 
-                'Travel': {'Taxi' : ['Uber','Zaak']}, 
-                'Utilities' : {'Telephone' : ['Vodafone'], 
-                'Internet' : ['ACTCORP', 'JIOMONEY']},
-                'Personal' : {'Clothing' : ['Myntra'], 'Others': ['DUNZO']}, 
-                'Home Office': {'Other': ['LINKEDIN', 'RESUME', 'Zety', 'AMAZON INTERNET']}, 
-                'Entertainment' : {'Other' : ['ITUNES', 'NETFLIX']},
-                'Household' : {'Rent' : ['rent']},
-                'Savings' : {'RD' : ['MonthlyRD'], 'PPF' : ['PPF']}}
-
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
@@ -212,13 +205,9 @@ def mail_checker():
                 amount_value = float(("-" + str(matchAmount.replace(',', ''))).lstrip('-'))
                 finalPayee = " ".join(matchPayeeName.split())
 
-                knownPayee = [finalPayee if payee.lower() == 'rent' and 'rent' in finalPayee.lower() else payee for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                knownCategory = [category for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                knownSubcategory = [subc for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-
-                category = knownCategory[0] if knownCategory else 'Unknown'
-                subCategory = knownSubcategory[0] if knownSubcategory else 'Unknown'
-                finalPayee = knownPayee[0] if knownPayee else finalPayee
+                category, subCategory, confidence, strategy = classify_transaction(finalPayee, "")
+                if category != 'Unknown' and strategy != 'learned' and confidence >= 0.9:
+                    learn_merchant_mapping(finalPayee, category, subCategory, source='mail_auto', confidence=confidence)
 
                 logging.info(f"Payee: {finalPayee}, Amount: {amount_value}, Date: {date}")
                 expense = (date, amount_value, category, subCategory, 'Debit', '', '', finalPayee, 'Cleared', '', 'Personal Expense', '', '', '')
@@ -268,8 +257,6 @@ def mail_checker():
             except Exception as e:
                 logging.error(f"Error processing email {num}: {e}")
                 mail.store(num, '-FLAGS', '\\Seen')
-            except CashWithdrawalException as e:
-                pass
 
     except imaplib.IMAP4.error as e:
         logging.error(f"IMAP error: {e}")

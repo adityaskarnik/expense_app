@@ -15,3 +15,6 @@ dump*.csv
 db.sqlite3
 expense_data.json
 .ipynb_checkpoints/
+Untitled.ipynb
+backup_before_delete_2026-06-02_10-00-41.sql
+backup.sql

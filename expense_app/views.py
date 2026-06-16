@@ -27,6 +27,7 @@ import logging
 from elasticsearch import Elasticsearch
 from django.core.paginator import Paginator
 from django.db import models
+from .categorization import classify_transaction, learn_merchant_mapping
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -104,8 +105,24 @@ def update_data(request):
             with open(file) as d:
                 data = json.loads(d.read())
                 for i in range((len(data)-new_data),len(data)):
-                    p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=data[i]['Category'], 
-                    sub_category=data[i]['Sub Category'], payment_method=data[i]['Payment Method'],
+                    csv_category = data[i].get('Category', 'Unknown') or 'Unknown'
+                    csv_sub_category = data[i].get('Sub Category', 'Unknown') or 'Unknown'
+                    payee = data[i].get('Payee / Payer', '')
+                    description = data[i].get('Description', '')
+
+                    predicted_category, predicted_sub_category, _, _ = classify_transaction(payee, description)
+                    final_category = csv_category
+                    final_sub_category = csv_sub_category
+
+                    if final_category in ('', 'Unknown') and predicted_category not in ('', 'Unknown'):
+                        final_category = predicted_category
+                        final_sub_category = predicted_sub_category
+
+                    if final_category not in ('', 'Unknown'):
+                        learn_merchant_mapping(payee or description, final_category, final_sub_category, source='csv_import')
+
+                    p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=final_category,
+                    sub_category=final_sub_category, payment_method=data[i]['Payment Method'],
                     description=data[i]['Description'], ref_checkno=data[i]['Ref/Check No'], payee_payer=data[i]['Payee / Payer'], 
                     status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
                     account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
@@ -113,8 +130,8 @@ def update_data(request):
                     expense = {}
                     expense['date'] = data[i]['Date']
                     expense['amount'] = data[i]['Amount']
-                    expense['category'] = data[i]['Category']
-                    expense['sub_category'] = data[i]['Sub Category']
+                    expense['category'] = final_category
+                    expense['sub_category'] = final_sub_category
                     expense['payment_method'] = data[i]['Payment Method']
                     expense['description'] = data[i]['Description']
                     expense['ref_checkno'] = data[i]['Ref/Check No']
@@ -202,8 +219,24 @@ def startdate_enddate(request):
 
 
 def add_expense(request):
-    p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=request.POST.get('category'), 
-            sub_category=request.POST.get('subcategory'), payment_method=request.POST.get('method'),
+    requested_category = request.POST.get('category') or 'Unknown'
+    requested_sub_category = request.POST.get('subcategory') or 'Unknown'
+    payee = request.POST.get('payee') or ''
+    description = request.POST.get('description') or ''
+
+    predicted_category, predicted_sub_category, _, _ = classify_transaction(payee, description)
+    final_category = requested_category
+    final_sub_category = requested_sub_category
+
+    if final_category in ('', 'Unknown') and predicted_category not in ('', 'Unknown'):
+        final_category = predicted_category
+        final_sub_category = predicted_sub_category
+
+    if final_category not in ('', 'Unknown'):
+        learn_merchant_mapping(payee or description, final_category, final_sub_category, source='web_add')
+
+    p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=final_category,
+            sub_category=final_sub_category, payment_method=request.POST.get('method'),
             description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
             status=request.POST.get('status'), receipt_picture='',
             account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
@@ -212,8 +245,8 @@ def add_expense(request):
     expense = {}
     expense['date'] = request.POST.get('date')
     expense['amount'] = request.POST.get('amount')
-    expense['category'] = request.POST.get('category')
-    expense['sub_category'] = request.POST.get('subcategory')
+    expense['category'] = final_category
+    expense['sub_category'] = final_sub_category
     expense['payment_method'] = request.POST.get('method')
     expense['description'] = request.POST.get('description')
     expense['ref_checkno'] = request.POST.get('checkno')
