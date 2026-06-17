@@ -223,6 +223,7 @@ def add_expense(request):
     requested_sub_category = request.POST.get('subcategory') or 'Unknown'
     payee = request.POST.get('payee') or ''
     description = request.POST.get('description') or ''
+    expense_id = request.POST.get('expense_id')
 
     predicted_category, predicted_sub_category, _, _ = classify_transaction(payee, description)
     final_category = requested_category
@@ -235,12 +236,36 @@ def add_expense(request):
     if final_category not in ('', 'Unknown'):
         learn_merchant_mapping(payee or description, final_category, final_sub_category, source='web_add')
 
-    p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=final_category,
-            sub_category=final_sub_category, payment_method=request.POST.get('method'),
-            description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
-            status=request.POST.get('status'), receipt_picture='',
-            account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
-    p.save()
+    # Check if editing existing expense or creating new one
+    if expense_id:
+        # Update existing expense
+        try:
+            p = Expenses.objects.get(id=expense_id)
+            p.date = request.POST.get('date')
+            p.amount = request.POST.get('amount')
+            p.category = final_category
+            p.sub_category = final_sub_category
+            p.payment_method = request.POST.get('method')
+            p.description = request.POST.get('description')
+            p.ref_checkno = request.POST.get('checkno')
+            p.payee_payer = request.POST.get('payee')
+            p.status = request.POST.get('status')
+            p.receipt_picture = ''
+            p.account = request.POST.get('account')
+            p.tag = request.POST.get('tag')
+            p.tax = request.POST.get('tax')
+            p.mileage = ''
+            p.save()
+        except Expenses.DoesNotExist:
+            return JsonResponse({'error': 'Expense not found'}, status=404)
+    else:
+        # Create new expense
+        p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=final_category,
+                sub_category=final_sub_category, payment_method=request.POST.get('method'),
+                description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
+                status=request.POST.get('status'), receipt_picture='',
+                account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
+        p.save()
     
     expense = {}
     expense['date'] = request.POST.get('date')

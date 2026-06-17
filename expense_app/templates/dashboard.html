@@ -41,26 +41,27 @@
                 <!-- Form -->
                 <form class="modal-body" action="/add_expense/" method="POST" id="post-form">
                     {% csrf_token %}
+                    <input type="hidden" id="expense_id" name="expense_id" value="">
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="account" type="text" class="form-control" disabled="true" value="Personal Expense">
+                        <input id="account" type="text" class="form-control" readonly="true" value="Personal Expense" name="account">
                         <div class="form-control-feedback">
                             <i class="icon-notebook text-muted"></i>
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="datesingle" type="text" class="form-control">
+                        <input id="datesingle" type="text" class="form-control" name="date">
                         <div class="form-control-feedback">
                             <i class="icon-calendar22 text-muted"></i>
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="amount" type="number" class="form-control" placeholder="Amount">
+                        <input id="amount" type="number" class="form-control" placeholder="Amount" name="amount">
                         <div class="form-control-feedback">
                             ₹
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="payee" type="text" class="form-control" placeholder="Payee/Payer">
+                        <input id="payee" type="text" class="form-control" placeholder="Payee/Payer" name="payee">
                         <div class="form-control-feedback">
                             <i class="icon-person text-muted"></i>
                         </div>
@@ -91,102 +92,8 @@
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <select id="sub-category" class="form-control" placeholder="Sub Category" name="sub-category">
+                        <select id="sub-category" class="form-control" placeholder="Sub Category" name="subcategory">
                             <option value="" disabled selected hidden>Sub Category</option>
-                            <option value="1">AAA or Road Services</option>
-                            <option value="1">Fuel</option>
-                            <option value="1">Insurance</option>
-                            <option value="1">Lease</option>
-                            <option value="1">Maintenance</option>
-                            <option value="1">Mileage</option>
-                            <option value="1">Registration</option>
-                            <option value="1">Other</option>
-                            <option value="2">Concert</option>
-                            <option value="2">Movies</option>
-                            <option value="2">Party</option>
-                            <option value="2">Sports</option>
-                            <option value="2">Other</option>
-                            <option value="3">Child Care</option>
-                            <option value="3">Child Education</option>
-                            <option value="3">Toy</option>
-                            <option value="3">Other</option>
-                            <option value="4">Drinks</option>
-                            <option value="4">Groceries</option>
-                            <option value="4">Other</option>
-                            <option value="4">Restaurant</option>
-                            <option value="4">Snacks</option>
-                            <option value="4">Breakfast</option>
-                            <option value="4">Tiffin</option>
-                            <option value="5">Dental</option>
-                            <option value="5">Eye Care</option>
-                            <option value="5">Health Insurance</option>
-                            <option value="5">Medical</option>
-                            <option value="5">Prescription</option>
-                            <option value="5">Nutrition</option>
-                            <option value="5">Other</option>
-                            <option value="6">Computer</option>
-                            <option value="6">Electronics</option>
-                            <option value="6">Stationary</option>
-                            <option value="6">Office Furniture</option>
-                            <option value="6">Office Supply</option>
-                            <option value="6">Other</option>
-                            <option value="7">Appliance</option>
-                            <option value="7">Consumables</option>
-                            <option value="7">Home Maintenance</option>
-                            <option value="7">Homeowner Fee</option>
-                            <option value="7">Household Tools</option>
-                            <option value="7">Misc Household Items</option>
-                            <option value="7">Other</option>
-                            <option value="7">Postage</option>
-                            <option value="7">Rent</option>
-                            <option value="8">Auto</option>
-                            <option value="8">Health</option>
-                            <option value="8">Home</option>
-                            <option value="8">Life</option>
-                            <option value="8">Other</option>
-                            <option value="9">Auto</option>
-                            <option value="9">Home Equity</option>
-                            <option value="9">Mortgage</option>
-                            <option value="9">Student</option>
-                            <option value="9">Other</option>
-                            <option value="10">Other</option>
-                            <option value="11">Clothing</option>
-                            <option value="11">Donation</option>
-                            <option value="11">Gift</option>
-                            <option value="11">Personal Care</option>
-                            <option value="11">Other</option>
-                            <option value="11">Lend</option>
-                            <option value="12">RD</option>
-                            <option value="12">PPF</option>
-                            <option value="12">LIC</option>
-                            <option value="13">Property Tax</option>
-                            <option value="13">Other</option>
-                            <option value="14">Airplane</option>
-                            <option value="14">Car Rental</option>
-                            <option value="14">Food</option>
-                            <option value="14">Hotel</option>
-                            <option value="14">Misc</option>
-                            <option value="14">Other</option>
-                            <option value="14">Other Transportation</option>
-                            <option value="14">Taxi</option>
-                            <option value="14">Bus</option>
-                            <option value="14">Metro</option>
-                            <option value="14">Train</option>
-                            <option value="15">Cable TV</option>
-                            <option value="15">Garbage</option>
-                            <option value="15">Electric</option>
-                            <option value="15">Gas</option>
-                            <option value="15">Internet</option>
-                            <option value="15">Telephone</option>
-                            <option value="15">Water</option>
-                            <option value="16">Airplane</option>
-                            <option value="16">Car Rental</option>
-                            <option value="16">Food</option>
-                            <option value="16">Hotel</option>
-                            <option value="16">Misc</option>
-                            <option value="16">Other Transportation</option>
-                            <option value="16">Taxi</option>
-                            <option value="16">Other</option>
                         </select>
                         <div class="form-control-feedback">
                             <i class="icon-stack-empty text-muted"></i>
@@ -216,7 +123,7 @@
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="check-no" type="text" class="form-control" placeholder="Ref/Check No">
+                        <input id="check-no" type="text" class="form-control" placeholder="Ref/Check No" name="checkno">
                         <div class="form-control-feedback">
                             <i class="icon-pencil7 text-muted"></i>
                         </div>
@@ -234,13 +141,13 @@
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="tax" type="text" class="form-control" placeholder="Tax">
+                        <input id="tax" type="text" class="form-control" placeholder="Tax" name="tax">
                         <div class="form-control-feedback">
                             <i class="icon-calculator3 text-muted"></i>
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="description" type="text" class="form-control" placeholder="Description">
+                        <input id="description" type="text" class="form-control" placeholder="Description" name="description">
                         <div class="form-control-feedback">
                             <i class="icon-file-text2 text-muted"></i>
                         </div>
@@ -262,6 +169,69 @@
 
 <script type="text/javascript" language="javascript" class="init">
     $(document).ready(function() {
+        // Category to subcategory mapping from CATEGORY_RULES
+        const categorySubcategories = {
+            "Automobile": ["Fuel", "Maintenance", "Insurance"],
+            "Entertainment": ["Streaming", "Movies", "Gaming", "Other"],
+            "Food": ["Restaurant", "Grocery"],
+            "Health Care": ["Medical", "Pharmacy", "Consultation", "Health Insurance", "Hospital"],
+            "Home Office": ["Other"],
+            "Household": ["Rent", "Maintenance", "Furniture", "Groceries", "Maintenance Services"],
+            "Insurance": ["Life"],
+            "Personal": ["Clothing", "Grooming", "Personal Care", "Others"],
+            "Savings": ["RD", "PPF", "Investments", "Fixed Deposit"],
+            "Travel": ["Taxi", "Fuel", "Transit", "Airplane", "Train"],
+            "Utilities": ["Telephone", "Internet", "Electricity", "Gas", "Water"],
+            "Vacation": ["Hotel", "Other"],
+            "Family": ["Other"],
+            "Loans": ["Other"],
+            "Tax": ["Other"],
+            "Unknown": ["Unknown"],
+            "Other": ["Other"]
+        };
+
+        function populateSubcategories(categoryName) {
+            const subcategorySelect = $("#modal-edit-expense #sub-category");
+            subcategorySelect.html('<option value="" disabled selected hidden>Sub Category</option>');
+            
+            if (!categoryName || !categorySubcategories[categoryName]) {
+                return;
+            }
+            
+            const subcategories = categorySubcategories[categoryName];
+            subcategories.forEach(subcat => {
+                subcategorySelect.append(`<option value="${subcat}">${subcat}</option>`);
+            });
+        }
+
+        function fillEditModal(row) {
+            if (!row) {
+                return;
+            }
+            // Set expense ID for update operation
+            $("#modal-edit-expense #expense_id").val(row.id || "");
+            
+            const categoryVal = row.category || "";
+            $("#modal-edit-expense .modal-body #category").val(categoryVal);
+            populateSubcategories(categoryVal);
+            
+            $("#modal-edit-expense .modal-body #datesingle").val(row.date || "");
+            $("#modal-edit-expense .modal-body #amount").val(row.amount || "");
+            $("#modal-edit-expense .modal-body #payee").val(row.payee_payer || "");
+            $("#modal-edit-expense .modal-body #sub-category").val(row.sub_category || "");
+            $("#modal-edit-expense .modal-body #method").val(row.payment_method || "");
+            $("#modal-edit-expense .modal-body #check-no").val(row.ref_checkno || "");
+            $("#modal-edit-expense .modal-body #tag").val(row.tag || "");
+            $("#modal-edit-expense .modal-body #tax").val(row.tax || "");
+            $("#modal-edit-expense .modal-body #status").val(row.status || "");
+            $("#modal-edit-expense .modal-body #description").val(row.description || "");
+        }
+
+        // Populate subcategories when category changes
+        $("#modal-edit-expense #category").on("change", function() {
+            populateSubcategories($(this).val());
+        });
+
         var table = $('#expense_table').DataTable( {
             scrollX: true,
 		    // "scrollCollapse": true,
@@ -292,20 +262,7 @@
 
                     {
                         mRender: function (data, type, row) {
-                            console.log("ROW DATA",row);
-                            console.log("ROW DATE",row.date);
-                            $(".modal-body #datesingle").val(row.date);
-                            $(".modal-body #amount").val(row.amount);
-                            $(".modal-body #payee").val(row.payee_payer);
-                            $(".modal-body #category").val(row.category);
-                            $(".modal-body #sub-category").val(row.sub_category);
-                            $(".modal-body #method").val(row.payment_method);
-                            $(".modal-body #check-no").val(row.ref_checkno);
-                            $(".modal-body #tag").val(row.tag);
-                            $(".modal-body #tax").val(row.tax);
-                            $(".modal-body #status").val(row.status);
-                            $(".modal-body #description").val(row.description);
-                            var item = '<a data-popup="tooltip" title="Edit Expense" data-toggle="modal" data-target="#modal-edit-expense" class="btn icon-pencil">'
+                            var item = '<a data-popup="tooltip" title="Edit Expense" data-toggle="modal" data-target="#modal-edit-expense" class="btn icon-pencil edit-expense"></a>';
                             return item
                         }
                     },
@@ -325,7 +282,56 @@
                     { "data": "mileage" , "title": "Mileage"}
                 ],
         } );
-        // var audio = new Audio('/home/adityakarnik/Music/quite-impressed.mp3');
+
+        $('#expense_table tbody').on('click', 'a.edit-expense', function () {
+            var tr = $(this).closest('tr');
+            var rowData = table.row(tr).data();
+            fillEditModal(rowData);
+        });
+
+        // Handle form submission with AJAX
+        $('#post-form').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            var expenseId = $('#expense_id').val();
+            var isEditing = expenseId && expenseId !== '';
+            $.ajax({
+                type: 'POST',
+                url: '/add_expense/',
+                data: formData,
+                success: function(response) {
+                    console.log('Expense saved successfully', response);
+                    // Close the modal
+                    $('#modal-edit-expense').modal('hide');
+                    // Reload the table
+                    table.ajax.reload();
+                    // Show success notification based on edit or add
+                    var messageText = isEditing ? 'Expense updated successfully.' : 'Expense added successfully.';
+                    var notice = new PNotify({
+                        title: 'Success',
+                        text: messageText,
+                        icon: 'icon-checkmark',
+                        width: '280px',
+                        hide: true,
+                        addclass: 'alert bg-success text-black'
+                    });
+                },
+                error: function(response) {
+                    console.log('Error saving expense', response);
+                    var errorText = isEditing ? 'Error updating expense. Please try again.' : 'Error adding expense. Please try again.';
+                    var notice = new PNotify({
+                        title: 'Error',
+                        text: errorText,
+                        icon: 'icon-cross2',
+                        width: '280px',
+                        hide: true,
+                        addclass: 'alert bg-danger text-black'
+                    });
+                }
+            });
+        });
+
+        var audio = new Audio('/home/adityakarnik/Music/quite-impressed.mp3');
         $.ajax({
             type: "GET",
             url: '/update_data/',
@@ -352,8 +358,10 @@
         });
     } );
 
-    $('.modal-edit-expense').on('hidden.bs.modal', function(e)
+    $('#modal-edit-expense').on('hidden.bs.modal', function(e)
     { 
+        // Clear the expense ID for next new entry
+        $("#modal-edit-expense #expense_id").val("");
         $(this).removeData();
     }) ;
 </script>

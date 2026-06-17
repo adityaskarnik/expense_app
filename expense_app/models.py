@@ -18,7 +18,7 @@ class Expenses(models.Model):
     status = models.CharField(max_length=500)
     receipt_picture = models.CharField(max_length=500)
     account = models.CharField(max_length=500)
-    tag = models.CharField(max_length=500)
+    tag = models.CharField(max_length=500, null=True, blank=True)
     tax = models.CharField(max_length=500)
     mileage = models.CharField(max_length=500)
 
