@@ -15,6 +15,7 @@ from .forms import SignUpForm
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
 import os
+from decimal import Decimal, InvalidOperation
 from .models import Expenses
 from django.core import serializers
 from django.db.models import Sum, Q
@@ -221,9 +222,19 @@ def startdate_enddate(request):
 def add_expense(request):
     requested_category = request.POST.get('category') or 'Unknown'
     requested_sub_category = request.POST.get('subcategory') or 'Unknown'
+    custom_sub_category = (request.POST.get('custom_subcategory') or '').strip()
     payee = request.POST.get('payee') or ''
     description = request.POST.get('description') or ''
     expense_id = request.POST.get('expense_id')
+    amount_raw = (request.POST.get('amount') or '').replace(',', '').strip()
+
+    try:
+        amount_value = Decimal(amount_raw).quantize(Decimal('0.01'))
+    except (InvalidOperation, TypeError):
+        return JsonResponse({'error': 'Invalid amount. Please enter a valid decimal number.'}, status=400)
+
+    if requested_sub_category == '__custom__':
+        requested_sub_category = custom_sub_category or 'Unknown'
 
     predicted_category, predicted_sub_category, _, _ = classify_transaction(payee, description)
     final_category = requested_category
@@ -242,7 +253,7 @@ def add_expense(request):
         try:
             p = Expenses.objects.get(id=expense_id)
             p.date = request.POST.get('date')
-            p.amount = request.POST.get('amount')
+            p.amount = amount_value
             p.category = final_category
             p.sub_category = final_sub_category
             p.payment_method = request.POST.get('method')
@@ -260,7 +271,7 @@ def add_expense(request):
             return JsonResponse({'error': 'Expense not found'}, status=404)
     else:
         # Create new expense
-        p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=final_category,
+        p = Expenses(date=request.POST.get('date'), amount=amount_value, category=final_category,
                 sub_category=final_sub_category, payment_method=request.POST.get('method'),
                 description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
                 status=request.POST.get('status'), receipt_picture='',
@@ -269,7 +280,7 @@ def add_expense(request):
     
     expense = {}
     expense['date'] = request.POST.get('date')
-    expense['amount'] = request.POST.get('amount')
+    expense['amount'] = str(amount_value)
     expense['category'] = final_category
     expense['sub_category'] = final_sub_category
     expense['payment_method'] = request.POST.get('method')

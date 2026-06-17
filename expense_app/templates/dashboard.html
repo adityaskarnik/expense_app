@@ -55,7 +55,7 @@
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
-                        <input id="amount" type="number" class="form-control" placeholder="Amount" name="amount">
+                        <input id="amount" type="number" step="0.01" class="form-control" placeholder="Amount" name="amount">
                         <div class="form-control-feedback">
                             ₹
                         </div>
@@ -97,6 +97,12 @@
                         </select>
                         <div class="form-control-feedback">
                             <i class="icon-stack-empty text-muted"></i>
+                        </div>
+                    </div>
+                    <div class="form-group form-group-feedback form-group-feedback-left" id="custom-subcategory-group" style="display:none;">
+                        <input id="custom-subcategory" type="text" class="form-control" placeholder="Enter new sub category" name="custom_subcategory" disabled>
+                        <div class="form-control-feedback">
+                            <i class="icon-plus-circle2 text-muted"></i>
                         </div>
                     </div>
                     <div class="form-group form-group-feedback form-group-feedback-left">
@@ -202,6 +208,20 @@
             subcategories.forEach(subcat => {
                 subcategorySelect.append(`<option value="${subcat}">${subcat}</option>`);
             });
+            subcategorySelect.append('<option value="__custom__">+ Add new sub category</option>');
+            toggleCustomSubcategoryInput(false);
+        }
+
+        function toggleCustomSubcategoryInput(showInput) {
+            const customGroup = $("#modal-edit-expense #custom-subcategory-group");
+            const customInput = $("#modal-edit-expense #custom-subcategory");
+            if (showInput) {
+                customGroup.show();
+                customInput.prop("disabled", false).prop("required", true).focus();
+            } else {
+                customGroup.hide();
+                customInput.prop("disabled", true).prop("required", false).val("");
+            }
         }
 
         function fillEditModal(row) {
@@ -214,22 +234,36 @@
             const categoryVal = row.category || "";
             $("#modal-edit-expense .modal-body #category").val(categoryVal);
             populateSubcategories(categoryVal);
+
+            const currentSubCategory = row.sub_category || "";
+            const subcategorySelect = $("#modal-edit-expense .modal-body #sub-category");
+            const hasSubCategoryOption = subcategorySelect.find('option').filter(function() {
+                return $(this).val() === currentSubCategory;
+            }).length > 0;
+            if (currentSubCategory && !hasSubCategoryOption) {
+                subcategorySelect.append(`<option value="${currentSubCategory}">${currentSubCategory}</option>`);
+            }
             
             $("#modal-edit-expense .modal-body #datesingle").val(row.date || "");
             $("#modal-edit-expense .modal-body #amount").val(row.amount || "");
             $("#modal-edit-expense .modal-body #payee").val(row.payee_payer || "");
-            $("#modal-edit-expense .modal-body #sub-category").val(row.sub_category || "");
+            $("#modal-edit-expense .modal-body #sub-category").val(currentSubCategory);
             $("#modal-edit-expense .modal-body #method").val(row.payment_method || "");
             $("#modal-edit-expense .modal-body #check-no").val(row.ref_checkno || "");
             $("#modal-edit-expense .modal-body #tag").val(row.tag || "");
             $("#modal-edit-expense .modal-body #tax").val(row.tax || "");
             $("#modal-edit-expense .modal-body #status").val(row.status || "");
             $("#modal-edit-expense .modal-body #description").val(row.description || "");
+            toggleCustomSubcategoryInput(false);
         }
 
         // Populate subcategories when category changes
         $("#modal-edit-expense #category").on("change", function() {
             populateSubcategories($(this).val());
+        });
+
+        $("#modal-edit-expense #sub-category").on("change", function() {
+            toggleCustomSubcategoryInput($(this).val() === "__custom__");
         });
 
         var table = $('#expense_table').DataTable( {
@@ -292,6 +326,17 @@
         // Handle form submission with AJAX
         $('#post-form').on('submit', function(e) {
             e.preventDefault();
+            if ($('#sub-category').val() === '__custom__' && !$('#custom-subcategory').val().trim()) {
+                new PNotify({
+                    title: 'Validation Error',
+                    text: 'Please enter a custom sub category.',
+                    icon: 'icon-warning22',
+                    width: '280px',
+                    hide: true,
+                    addclass: 'alert bg-warning text-black'
+                });
+                return;
+            }
             var formData = $(this).serialize();
             var expenseId = $('#expense_id').val();
             var isEditing = expenseId && expenseId !== '';
@@ -318,7 +363,8 @@
                 },
                 error: function(response) {
                     console.log('Error saving expense', response);
-                    var errorText = isEditing ? 'Error updating expense. Please try again.' : 'Error adding expense. Please try again.';
+                    var serverError = response && response.responseJSON && response.responseJSON.error;
+                    var errorText = serverError || (isEditing ? 'Error updating expense. Please try again.' : 'Error adding expense. Please try again.');
                     var notice = new PNotify({
                         title: 'Error',
                         text: errorText,
@@ -331,7 +377,6 @@
             });
         });
 
-        var audio = new Audio('/home/adityakarnik/Music/quite-impressed.mp3');
         $.ajax({
             type: "GET",
             url: '/update_data/',
@@ -349,7 +394,6 @@
                         hide: true,
                         addclass: 'alert bg-info text-black'
                     });
-                    // audio.play();
                 }
             }, 
             error: function(data) {
@@ -362,6 +406,8 @@
     { 
         // Clear the expense ID for next new entry
         $("#modal-edit-expense #expense_id").val("");
+        $("#modal-edit-expense #custom-subcategory-group").hide();
+        $("#modal-edit-expense #custom-subcategory").prop("disabled", true).prop("required", false).val("");
         $(this).removeData();
     }) ;
 </script>
