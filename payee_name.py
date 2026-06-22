@@ -206,7 +206,7 @@ def mail_checker():
         mail.select("inbox")
         logging.info('Inbox selected')
 
-        result, data = mail.search(None, '(UNSEEN)', '(OR (OR HEADER Subject \"Transaction alert for your State Bank of India Debit Card\" SUBJECT \"Fwd: Standard Chartered: Transaction Alert\") HEADER Subject \"CBSSBI ALERT\")')
+        result, data = mail.search(None, '(UNSEEN)', '(OR (OR HEADER Subject \"Transaction alert for your State Bank of India Debit Card\" SUBJECT \"Standard Chartered: Transaction Alert\") HEADER Subject \"CBSSBI ALERT\")')
         logging.info(f"Mail search completed, found {len(data[0].split())}")
 
         for num in data[0].split():
