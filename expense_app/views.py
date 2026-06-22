@@ -97,7 +97,7 @@ def index(request):
         return render(request, 'dashboard.html', {'data':data})
 
 @app.task
-def update_data(request):
+def update_data(request=None):
     filepath = download_new_attachment()
     if (filepath != None):
         new_data = check_new_data(filepath)
