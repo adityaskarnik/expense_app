@@ -14,6 +14,7 @@ from django import forms
 from .forms import SignUpForm
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 import os
 from decimal import Decimal, InvalidOperation
 from .models import Expenses
@@ -186,6 +187,7 @@ def ajax_loaddata(request):
     return JsonResponse(response)
 
 
+@login_required
 def insert_data(request):
     p = Expenses(date="10/10/1991", amount="100", category="Personal", sub_category="nothing personal", payment_method="",
         description="", ref_checkno="", payee_payer="", status="", receipt_picture="",
@@ -193,6 +195,8 @@ def insert_data(request):
     p.save
 
 
+@login_required
+@require_POST
 def delete_data(request):
     p = Expenses.objects.all().delete()
     open(cwd+'/expense_data.json', 'w').close()
@@ -218,7 +222,8 @@ def startdate_enddate(request):
     enddate = Expenses.objects.latest('date').date
     return JsonResponse({'startdate': startdate, 'enddate': enddate})
 
-
+@login_required
+@require_POST
 def add_expense(request):
     requested_category = request.POST.get('category') or 'Unknown'
     requested_sub_category = request.POST.get('subcategory') or 'Unknown'
