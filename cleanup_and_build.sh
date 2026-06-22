@@ -1,8 +1,6 @@
-if [ -n "$(sudo docker ps -aq)" ]; then
-  sudo docker stop $(sudo docker ps -aq)
-  sudo docker rm $(sudo docker ps -aq)
-fi
+#!/usr/bin/env bash
+set -euo pipefail
 
-sudo docker rmi -f $(sudo docker images -aq)
-sudo docker system prune -f
+# Only tear down resources for this compose project (avoid deleting unrelated containers/images).
+sudo docker compose down --remove-orphans --volumes
 sudo docker compose up --build
