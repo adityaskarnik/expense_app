@@ -1,12 +1,18 @@
-import pandas as pd
 import json
 
-# Load JSON data
-with open('expense_data.json', 'r') as json_file:
-    data = json.load(json_file)
+import pandas as pd
 
-df = pd.DataFrame(data)
 
-df.to_csv('data.csv', index=False)
+def main():
+    # Load JSON data
+    with open('expense_data.json', 'r') as json_file:
+        data = json.load(json_file)
 
-print("JSON data has been converted to CSV and saved as 'data.csv'")
+    df = pd.DataFrame(data)
+    df.to_csv('data.csv', index=False)
+
+    print("JSON data has been converted to CSV and saved as 'data.csv'")
+
+
+if __name__ == '__main__':
+    main()
