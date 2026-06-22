@@ -390,22 +390,16 @@ def learn_merchant_mapping(merchant_text, category, sub_category, source="manual
 
     if not created:
         mapping.merchant_display = str(merchant_text).strip() or mapping.merchant_display
-        mapping.category = category
-        mapping.sub_category = sub_category or mapping.sub_category or "Unknown"
-        mapping.source = source
-        mapping.confidence = float(confidence)
         mapping.times_used += 1
-        mapping.save(
-            update_fields=[
-                "merchant_display",
-                "category",
-                "sub_category",
-                "source",
-                "confidence",
-                "times_used",
-                "updated_at",
-            ]
-        )
+
+        if mapping.source != "manual" or source == "manual":
+            mapping.category = category
+            mapping.sub_category = sub_category or mapping.sub_category or "Unknown"
+            mapping.source = source
+            mapping.confidence = float(confidence)
+            mapping.save(update_fields=["merchant_display", "category", "sub_category", "source", "confidence", "times_used", "updated_at"])
+        else:
+            mapping.save(update_fields=["merchant_display", "times_used", "updated_at"])
     return mapping
 
 
