@@ -14,7 +14,9 @@ from django import forms
 from .forms import SignUpForm
 from django.contrib import auth
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 import os
+from decimal import Decimal, InvalidOperation
 from .models import Expenses
 from django.core import serializers
 from django.db.models import Sum, Q
@@ -27,6 +29,7 @@ import logging
 from elasticsearch import Elasticsearch
 from django.core.paginator import Paginator
 from django.db import models
+from .categorization import classify_transaction, learn_merchant_mapping
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -95,7 +98,7 @@ def index(request):
         return render(request, 'dashboard.html', {'data':data})
 
 @app.task
-def update_data(request):
+def update_data(request=None):
     filepath = download_new_attachment()
     if (filepath != None):
         new_data = check_new_data(filepath)
@@ -104,8 +107,24 @@ def update_data(request):
             with open(file) as d:
                 data = json.loads(d.read())
                 for i in range((len(data)-new_data),len(data)):
-                    p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=data[i]['Category'], 
-                    sub_category=data[i]['Sub Category'], payment_method=data[i]['Payment Method'],
+                    csv_category = data[i].get('Category', 'Unknown') or 'Unknown'
+                    csv_sub_category = data[i].get('Sub Category', 'Unknown') or 'Unknown'
+                    payee = data[i].get('Payee / Payer', '')
+                    description = data[i].get('Description', '')
+
+                    predicted_category, predicted_sub_category, _, _ = classify_transaction(payee, description)
+                    final_category = csv_category
+                    final_sub_category = csv_sub_category
+
+                    if final_category in ('', 'Unknown') and predicted_category not in ('', 'Unknown'):
+                        final_category = predicted_category
+                        final_sub_category = predicted_sub_category
+
+                    if final_category not in ('', 'Unknown'):
+                        learn_merchant_mapping(payee or description, final_category, final_sub_category, source='csv_import')
+
+                    p = Expenses(date=data[i]['Date'], amount=data[i]['Amount'], category=final_category,
+                    sub_category=final_sub_category, payment_method=data[i]['Payment Method'],
                     description=data[i]['Description'], ref_checkno=data[i]['Ref/Check No'], payee_payer=data[i]['Payee / Payer'], 
                     status=data[i]['Status'], receipt_picture=data[i]['Receipt Picture'],
                     account=data[i]['Account'], tag=data[i]['Tag'], tax=data[i]['Tax'], mileage=data[i]['Mileage'])
@@ -113,8 +132,8 @@ def update_data(request):
                     expense = {}
                     expense['date'] = data[i]['Date']
                     expense['amount'] = data[i]['Amount']
-                    expense['category'] = data[i]['Category']
-                    expense['sub_category'] = data[i]['Sub Category']
+                    expense['category'] = final_category
+                    expense['sub_category'] = final_sub_category
                     expense['payment_method'] = data[i]['Payment Method']
                     expense['description'] = data[i]['Description']
                     expense['ref_checkno'] = data[i]['Ref/Check No']
@@ -168,6 +187,7 @@ def ajax_loaddata(request):
     return JsonResponse(response)
 
 
+@login_required
 def insert_data(request):
     p = Expenses(date="10/10/1991", amount="100", category="Personal", sub_category="nothing personal", payment_method="",
         description="", ref_checkno="", payee_payer="", status="", receipt_picture="",
@@ -175,6 +195,8 @@ def insert_data(request):
     p.save
 
 
+@login_required
+@require_POST
 def delete_data(request):
     p = Expenses.objects.all().delete()
     open(cwd+'/expense_data.json', 'w').close()
@@ -200,20 +222,72 @@ def startdate_enddate(request):
     enddate = Expenses.objects.latest('date').date
     return JsonResponse({'startdate': startdate, 'enddate': enddate})
 
-
+@login_required
+@require_POST
 def add_expense(request):
-    p = Expenses(date=request.POST.get('date'), amount=request.POST.get('amount'), category=request.POST.get('category'), 
-            sub_category=request.POST.get('subcategory'), payment_method=request.POST.get('method'),
-            description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
-            status=request.POST.get('status'), receipt_picture='',
-            account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
-    p.save()
+    requested_category = request.POST.get('category') or 'Unknown'
+    requested_sub_category = request.POST.get('subcategory') or 'Unknown'
+    custom_sub_category = (request.POST.get('custom_subcategory') or '').strip()
+    payee = request.POST.get('payee') or ''
+    description = request.POST.get('description') or ''
+    expense_id = request.POST.get('expense_id')
+    amount_raw = (request.POST.get('amount') or '').replace(',', '').strip()
+
+    try:
+        amount_value = Decimal(amount_raw).quantize(Decimal('0.01'))
+    except (InvalidOperation, TypeError):
+        return JsonResponse({'error': 'Invalid amount. Please enter a valid decimal number.'}, status=400)
+
+    if requested_sub_category == '__custom__':
+        requested_sub_category = custom_sub_category or 'Unknown'
+
+    predicted_category, predicted_sub_category, _, _ = classify_transaction(payee, description)
+    final_category = requested_category
+    final_sub_category = requested_sub_category
+
+    if final_category in ('', 'Unknown') and predicted_category not in ('', 'Unknown'):
+        final_category = predicted_category
+        final_sub_category = predicted_sub_category
+
+    if final_category not in ('', 'Unknown'):
+        learn_merchant_mapping(payee or description, final_category, final_sub_category, source='web_add')
+
+    # Check if editing existing expense or creating new one
+    if expense_id:
+        # Update existing expense
+        try:
+            p = Expenses.objects.get(id=expense_id)
+            p.date = request.POST.get('date')
+            p.amount = amount_value
+            p.category = final_category
+            p.sub_category = final_sub_category
+            p.payment_method = request.POST.get('method')
+            p.description = request.POST.get('description')
+            p.ref_checkno = request.POST.get('checkno')
+            p.payee_payer = request.POST.get('payee')
+            p.status = request.POST.get('status')
+            p.receipt_picture = ''
+            p.account = request.POST.get('account')
+            p.tag = request.POST.get('tag')
+            p.tax = request.POST.get('tax')
+            p.mileage = ''
+            p.save()
+        except Expenses.DoesNotExist:
+            return JsonResponse({'error': 'Expense not found'}, status=404)
+    else:
+        # Create new expense
+        p = Expenses(date=request.POST.get('date'), amount=amount_value, category=final_category,
+                sub_category=final_sub_category, payment_method=request.POST.get('method'),
+                description=request.POST.get('description'), ref_checkno=request.POST.get('checkno'), payee_payer=request.POST.get('payee'), 
+                status=request.POST.get('status'), receipt_picture='',
+                account=request.POST.get('account'), tag=request.POST.get('tag'), tax=request.POST.get('tax'), mileage='')
+        p.save()
     
     expense = {}
     expense['date'] = request.POST.get('date')
-    expense['amount'] = request.POST.get('amount')
-    expense['category'] = request.POST.get('category')
-    expense['sub_category'] = request.POST.get('subcategory')
+    expense['amount'] = str(amount_value)
+    expense['category'] = final_category
+    expense['sub_category'] = final_sub_category
     expense['payment_method'] = request.POST.get('method')
     expense['description'] = request.POST.get('description')
     expense['ref_checkno'] = request.POST.get('checkno')

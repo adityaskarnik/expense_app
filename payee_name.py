@@ -1,20 +1,25 @@
 import imaplib
 import re
+import quopri
 from sys import getsizeof
 import socket
 import psycopg2
 import os
 from datetime import datetime
+import django
 from celery import Celery
 from celery.schedules import crontab
 from dotenv import load_dotenv
 import logging
 from elasticsearch import Elasticsearch
+from expense_app.categorization import classify_transaction, learn_merchant_mapping
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logging = logging.getLogger(__name__)
 
 load_dotenv()
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'expense_manager.settings')
+django.setup()
 
 app = Celery('payee_name',
             broker='amqp://rabbitmq:rabbitmq@rabbitmq:5672//')
@@ -29,17 +34,6 @@ es = Elasticsearch(
 
 
 cwd = os.getcwd()
-
-definedPayees = {'Food': {'Restaurant' : ['Zomato', 'CureFit', 'Diverse Retails', 'ONE97']}, 
-                'Travel': {'Taxi' : ['Uber','Zaak']}, 
-                'Utilities' : {'Telephone' : ['Vodafone'], 
-                'Internet' : ['ACTCORP', 'JIOMONEY']},
-                'Personal' : {'Clothing' : ['Myntra'], 'Others': ['DUNZO']}, 
-                'Home Office': {'Other': ['LINKEDIN', 'RESUME', 'Zety', 'AMAZON INTERNET']}, 
-                'Entertainment' : {'Other' : ['ITUNES', 'NETFLIX']},
-                'Household' : {'Rent' : ['rent']},
-                'Savings' : {'RD' : ['MonthlyRD'], 'PPF' : ['PPF']}}
-
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     # sender.add_periodic_task(crontab(hour='*/1'),mail_checker.s())
@@ -66,8 +60,17 @@ def insert_expense(conn, expense):
 
 def parse_email(raw_email):
     def try_parse_email(email_content):
+        # Normalize quoted-printable artifacts and uncommon spaces often present in email headers/bodies.
+        try:
+            decoded_content = quopri.decodestring(email_content.encode('utf-8', errors='ignore')).decode('utf-8', errors='ignore')
+        except Exception:
+            decoded_content = email_content
+        email_content = decoded_content.replace('\u202f', ' ').replace('\xa0', ' ')
+
         regex_patterns_payee = [
             r"((?<=PCA:[0-9]{10}:).*(?=Available))|((?<=(to|To)):?[0-9a-zA-Z.\s@\/]+((?=UTRNO)|(?=Available)))|((?<=at).*(?=txn))",
+            r"Transferred to\s+(.*?)(?=\.\s*Avl\s+Balance|\s+Avl\s+Balance)",
+            r"towards\s+([A-Za-z][A-Za-z &\/\-]{2,})(?=\.\s*Avl\s*Bal)",
             r'<td>Terminal Owner Name<\/td>\s*<td id="bank">([^<]+)<\/td>',
             r"ATD:[0-9]{10}:[A-Z0-9]+:(.*?)(?=\. Available Balance on)",
             r"PCA:[0-9]{10}:[0-9]+:(.*?)(?=\s{2,})",
@@ -82,8 +85,10 @@ def parse_email(raw_email):
             r'<td id="tranType">([A-Z]+\s?[A-Z]+)<\/td>'
         ]
         regex_patterns_amount = [
+            r"(?<=Debited\sINR\s)[\d,]+(?:\.\d{1,2})?(?=\son)",
             r"(?<=INR\s)[\d,]+(?:\.\d{1,2})?(?=\sDebited)",
             r"(?<=INR\s)[\d,]+(?:\.\d{1,2})?(?=\shas)",
+            r"by\s+INR\s+([\d,]+(?:\.\d{1,2})?)(?=\s+towards)",
             r"Rs\s?([\d,]+(?:\.\d{1,2})?)(?=\son)",
             r'<td id="transactionNumber">(\d+)</td>.*?<td id="amount">([\d.]+)</td>',
             r"(?<=Amount:)\s*[\d,]+(?:\.\d{1,2})?",
@@ -93,6 +98,8 @@ def parse_email(raw_email):
             r"Rs\s([\d,]+)\sw\/d"
         ]
         regex_patterns_date = [
+            r"\bon\s(\d{2}\/\d{2}\/\d{4})\b",
+            r"\bon\s(\d{2}\/\d{2}\/\d{2})\b",
             r'<td>Date &amp; Time</td>\s*<td id="dateTime">([A-Za-z]{3} \d{1,2}, \d{4}, \d{2}:\d{2})</td>',
             r"((?<=;).*\n?.*(?=\+0530))|((?<=Date:).*\n?.*(?<=(AM)|(PM)))|([0-9]{0,2}-[A-Z]{0,3}-[0-9]{0,4}\s[0-9]+?:[0-9]+?:[0-9]+)"
         ]
@@ -103,7 +110,7 @@ def parse_email(raw_email):
 
         try:
             for pattern in regex_patterns_payee:
-                match = re.search(pattern, email_content)
+                match = re.search(pattern, email_content, flags=re.IGNORECASE)
                 if match:
                     logging.info(f"Payee pattern matched: {match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()}")
                     matchPayeeName = match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()
@@ -112,14 +119,14 @@ def parse_email(raw_email):
                     break
 
             for pattern in regex_patterns_amount:
-                match = re.search(pattern, email_content)
+                match = re.search(pattern, email_content, flags=re.IGNORECASE)
                 if match:
                     logging.info(f"Amount pattern matched: {match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()}")
                     matchAmount = match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()
                     break
 
             for pattern in regex_patterns_date:
-                match = re.search(pattern, email_content)
+                match = re.search(pattern, email_content, flags=re.IGNORECASE)
                 if match:
                     logging.info(f"Date pattern matched: {match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()}")
                     matchDate = match.group(2) if match.lastindex == 2 else match.group(1) if match.lastindex == 1 else match.group().strip()
@@ -131,11 +138,17 @@ def parse_email(raw_email):
             raise e
 
     try:
-        logging.debug(f"DEBUG: trying for the first time")
+        logging.debug("DEBUG: trying for the first time")
+        if isinstance(raw_email, bytes):
+            try:
+                raw_email = raw_email.decode('utf-8')
+            except UnicodeDecodeError:
+                logging.info("UTF-8 decoding failed, trying latin-1")
+                raw_email = raw_email.decode('latin-1')
         matchPayeeName, matchAmount, matchDate = try_parse_email(raw_email)
-    except:
-        logging.info("Trying with UTF-8 decoding")
-        raw_email_utf8 = raw_email.decode('utf-8')
+    except Exception:
+        logging.info("Trying with UTF-8 decoding fallback")
+        raw_email_utf8 = raw_email.decode('utf-8') if isinstance(raw_email, bytes) else raw_email
         matchPayeeName, matchAmount, matchDate = try_parse_email(raw_email_utf8)
 
     return matchPayeeName, matchAmount, matchDate
@@ -150,23 +163,31 @@ def format_date(matchDate):
     except Exception as e:
         logging.error(f"Date format exception, trying another way: {e}")
         try:
-            date = datetime.strptime(matchDate.split()[0], '%d-%b-%y').strftime('%Y/%m/%d')
+            date = datetime.strptime(matchDate.split()[0], '%d/%m/%Y').strftime('%Y/%m/%d')
         except Exception as e:
-            logging.error(f"Date format exception, trying next way: {e}")
+            logging.error(f"Date format exception, trying another way: {e}")
             try:
-                dd = ' '.join(matchDate.split()).replace(',', '')
-                date = datetime.strptime(dd, '%a %d %b %Y %H:%M:%S').strftime('%Y/%m/%d')
+                date = datetime.strptime(matchDate.split()[0], '%d/%m/%y').strftime('%Y/%m/%d')
             except Exception as e:
+                logging.error(f"Date format exception, trying another way: {e}")
                 try:
-                    logging.info(f"Date format exception, trying second last way: {e}")
-                    date_format = '%b %d, %Y, %H:%M'
-                    parsed_date = datetime.strptime(matchDate, date_format)
-                    date = parsed_date.strftime('%Y/%m/%d')
+                    date = datetime.strptime(matchDate.split()[0], '%d-%b-%y').strftime('%Y/%m/%d')
                 except Exception as e:
-                    logging.info(f"Date format exception, trying last way: {e}")
-                    date_format = '%a, %b %d, %Y at %I:%M %p'
-                    parsed_date = datetime.strptime(matchDate, date_format)
-                    date = parsed_date.strftime('%Y/%m/%d')
+                    logging.error(f"Date format exception, trying next way: {e}")
+                    try:
+                        dd = ' '.join(matchDate.split()).replace(',', '')
+                        date = datetime.strptime(dd, '%a %d %b %Y %H:%M:%S').strftime('%Y/%m/%d')
+                    except Exception as e:
+                        try:
+                            logging.info(f"Date format exception, trying second last way: {e}")
+                            date_format = '%b %d, %Y, %H:%M'
+                            parsed_date = datetime.strptime(matchDate, date_format)
+                            date = parsed_date.strftime('%Y/%m/%d')
+                        except Exception as e:
+                            logging.info(f"Date format exception, trying last way: {e}")
+                            date_format = '%a, %b %d, %Y at %I:%M %p'
+                            parsed_date = datetime.strptime(matchDate, date_format)
+                            date = parsed_date.strftime('%Y/%m/%d')
     return date
 
 @app.task
@@ -185,7 +206,7 @@ def mail_checker():
         mail.select("inbox")
         logging.info('Inbox selected')
 
-        result, data = mail.search(None, '(UNSEEN)', '((OR HEADER Subject "Transaction alert for your State Bank of India Debit Card" HEADER Subject "Debit Alert"))')
+        result, data = mail.search(None, '(UNSEEN)', '(OR (OR HEADER Subject \"Transaction alert for your State Bank of India Debit Card\" SUBJECT \"Standard Chartered: Transaction Alert\") HEADER Subject \"CBSSBI ALERT\")')
         logging.info(f"Mail search completed, found {len(data[0].split())}")
 
         for num in data[0].split():
@@ -200,7 +221,7 @@ def mail_checker():
                 if matchPayeeName == "CASH WITHDRAWAL":
                     logging.info("Cash withdrawal email, skipping")
                     continue
-                elif 'ATMs for better security, convenience & faster complaint resolution' in matchPayeeName:
+                elif matchPayeeName and 'ATMs for better security, convenience & faster complaint resolution' in matchPayeeName:
                     logging.info("ATM Alert email, skipping")
                     continue
                 elif not (matchAmount and matchDate and matchPayeeName):
@@ -212,13 +233,9 @@ def mail_checker():
                 amount_value = float(("-" + str(matchAmount.replace(',', ''))).lstrip('-'))
                 finalPayee = " ".join(matchPayeeName.split())
 
-                knownPayee = [finalPayee if payee.lower() == 'rent' and 'rent' in finalPayee.lower() else payee for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                knownCategory = [category for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-                knownSubcategory = [subc for category, subcategory in definedPayees.items() for subc, payees in subcategory.items() for payee in payees if payee.lower() in finalPayee.lower()]
-
-                category = knownCategory[0] if knownCategory else 'Unknown'
-                subCategory = knownSubcategory[0] if knownSubcategory else 'Unknown'
-                finalPayee = knownPayee[0] if knownPayee else finalPayee
+                category, subCategory, confidence, strategy = classify_transaction(finalPayee, "")
+                if category != 'Unknown' and strategy != 'learned' and confidence >= 0.9:
+                    learn_merchant_mapping(finalPayee, category, subCategory, source='mail_auto', confidence=confidence)
 
                 logging.info(f"Payee: {finalPayee}, Amount: {amount_value}, Date: {date}")
                 expense = (date, amount_value, category, subCategory, 'Debit', '', '', finalPayee, 'Cleared', '', 'Personal Expense', '', '', '')
@@ -268,8 +285,6 @@ def mail_checker():
             except Exception as e:
                 logging.error(f"Error processing email {num}: {e}")
                 mail.store(num, '-FLAGS', '\\Seen')
-            except CashWithdrawalException as e:
-                pass
 
     except imaplib.IMAP4.error as e:
         logging.error(f"IMAP error: {e}")
